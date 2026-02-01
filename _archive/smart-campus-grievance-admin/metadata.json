@@ -1,9 +1,0 @@
-
-{
-  "name": "Smart Campus Grievance Admin",
-  "description": "A comprehensive dashboard for monitoring, assigning, and resolving campus maintenance requests with AI-powered insights.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
-}

@@ -1,8 +1,0 @@
-{
-  "name": "AIT Smart Campus Portal",
-  "description": "A comprehensive digital gateway for students, faculty, and administration of the AIT Smart Campus, featuring AI-powered academic assistance.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
-}
