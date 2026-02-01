@@ -1,0 +1,9 @@
+
+{
+  "name": "Smart Campus Organizer Portal",
+  "description": "A comprehensive dashboard for campus event organizers to manage registrations, track feedback, and coordinate upcoming academic and social events.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

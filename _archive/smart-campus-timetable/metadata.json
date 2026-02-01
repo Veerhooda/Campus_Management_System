@@ -1,0 +1,9 @@
+
+{
+  "name": "Smart Campus Timetable",
+  "description": "A sophisticated student dashboard for managing weekly schedules, courses, and academic progress with an AI-powered assistant for schedule optimization.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

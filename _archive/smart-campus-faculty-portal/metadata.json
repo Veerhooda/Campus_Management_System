@@ -1,0 +1,9 @@
+
+{
+  "name": "Smart Campus Faculty Portal",
+  "description": "A comprehensive dashboard for educators to manage classes, track attendance, grade submissions, and communicate with students.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

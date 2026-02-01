@@ -1,0 +1,8 @@
+
+{
+  "name": "Campus OS - Event Creator",
+  "description": "A high-fidelity event management and venue reservation system for campus communities, featuring AI-powered smart filling and conflict detection.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
