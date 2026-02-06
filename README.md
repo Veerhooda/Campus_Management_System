@@ -1,78 +1,283 @@
-# AIT Smart Campus Portal 🎓
+<div align="center">
 
-A unified, production-ready campus management system built with React, TypeScript, and TailwindCSS.
+# 🎓 AIT Smart Campus Management System
 
-![React](https://img.shields.io/badge/React-19-blue?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript)
-![Vite](https://img.shields.io/badge/Vite-6-purple?logo=vite)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-cyan?logo=tailwindcss)
+### The Complete Digital Infrastructure for Modern Educational Institutions
 
-## Features
+[![Frontend](https://img.shields.io/badge/Frontend-React_19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](./smart-campus-unified)
+[![Backend](https://img.shields.io/badge/Backend-NestJS_10-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](./ait-cms-backend)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-### 🎯 Role-Based Portals
+<p align="center">
+  <strong>A full-stack campus management platform featuring a React frontend and NestJS backend, designed to streamline academic operations, enhance student engagement, and empower administrators.</strong>
+</p>
 
-- **Student Portal** – Dashboard, courses, schedule, attendance tracking
-- **Faculty Portal** – Class management, attendance marking, grading
-- **Admin Dashboard** – System overview, user management, audit logs
-- **Organizer Portal** – Event management with AI suggestions
+[Live Demo](#-demo) •
+[Features](#-features) •
+[Quick Start](#-quick-start) •
+[Architecture](#-architecture) •
+[Documentation](#-documentation)
 
-### ✨ Key Highlights
+---
 
-- 🌙 Dark/Light mode support
-- 📱 Fully responsive design
-- 🔐 Role-based authentication
-- 📅 Interactive timetable with grid/list views
-- 📊 Real-time attendance marking
-- 🎫 Grievance ticket management
-- 🔔 Notification center with filtering
-- 🤖 AI-powered features (event suggestions)
+![Campus Dashboard Preview](https://img.shields.io/badge/📊_Dashboard-Preview-blue?style=flat-square)
+![Timetable Management](https://img.shields.io/badge/📅_Timetable-Smart_Scheduling-green?style=flat-square)
+![Attendance Tracking](https://img.shields.io/badge/✅_Attendance-Real_time-orange?style=flat-square)
 
-## Tech Stack
+</div>
 
-| Category   | Technology           |
-| ---------- | -------------------- |
-| Framework  | React 19             |
-| Language   | TypeScript           |
-| Build Tool | Vite                 |
-| Styling    | TailwindCSS          |
-| Routing    | React Router v7      |
-| Icons      | Material Symbols     |
-| Fonts      | Inter (Google Fonts) |
+---
 
-## Quick Start
+## 🌟 Overview
+
+**AIT Smart Campus** is a comprehensive, production-grade campus management system consisting of:
+
+| Component       | Technology         | Description                                              |
+| --------------- | ------------------ | -------------------------------------------------------- |
+| 🖥️ **Frontend** | React 19 + Vite    | Modern, responsive web portal with role-based interfaces |
+| ⚙️ **Backend**  | NestJS 10 + Prisma | Scalable REST API with PostgreSQL database               |
+
+### What Makes It Special?
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     🎓 AIT Smart Campus                             │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   👨‍🎓 STUDENTS        👨‍🏫 FACULTY         🔧 ADMIN        🎯 ORGANIZER │
+│   ┌─────────┐       ┌─────────┐       ┌─────────┐      ┌─────────┐ │
+│   │Dashboard│       │ Classes │       │ Users   │      │ Events  │ │
+│   │Courses  │       │Attendance│      │ Reports │      │Planning │ │
+│   │Schedule │       │ Grading │       │ Audit   │      │   AI    │ │
+│   └─────────┘       └─────────┘       └─────────┘      └─────────┘ │
+│                                                                     │
+│   ────────────────── Unified Experience ──────────────────────────  │
+│                                                                     │
+│   🌙 Dark Mode   📱 Responsive   🔐 Secure   ⚡ Fast   ♿ Accessible │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## ✨ Features
+
+### 🔐 Authentication & Security
+
+- JWT-based authentication with refresh token rotation
+- Role-based access control (RBAC) — Admin, Teacher, Student, Organizer
+- Rate limiting & security headers
+
+### 👥 User Management
+
+- Multi-role user profiles with department/class assignments
+- Bulk operations & soft deactivation
+- Complete audit trail
+
+### 📚 Academic Management
+
+- **Smart Timetable** — Conflict detection for classes, teachers, rooms
+- **Attendance Tracking** — Bulk marking with analytics
+- **Course Management** — Subject enrollment & tracking
+
+### 🎉 Campus Life
+
+- **Event Management** — Create, publish, register with capacity limits
+- **Grievance System** — Submit → Assign → Resolve workflow
+- **Maintenance Requests** — Priority-based facility management
+
+### 🔔 Communication
+
+- Real-time notifications with read/unread tracking
+- Bulk announcements to specific roles or users
+- File sharing with S3-compatible storage
+
+---
+
+## 🏗 Architecture
+
+```
+AIT_CMS/
+├── smart-campus-unified/          # 🖥️ FRONTEND
+│   ├── src/
+│   │   ├── components/            # Reusable UI components
+│   │   ├── pages/                 # Role-based page modules
+│   │   │   ├── admin/             # Admin dashboard
+│   │   │   ├── faculty/           # Faculty portal
+│   │   │   ├── student/           # Student portal
+│   │   │   └── shared/            # Cross-role pages
+│   │   ├── context/               # Auth & Theme contexts
+│   │   └── types/                 # TypeScript definitions
+│   └── package.json
+│
+├── ait-cms-backend/               # ⚙️ BACKEND
+│   ├── src/
+│   │   ├── modules/               # Feature modules
+│   │   │   ├── auth/              # Authentication
+│   │   │   ├── users/             # User management
+│   │   │   ├── students/          # Student profiles
+│   │   │   ├── teachers/          # Teacher profiles
+│   │   │   ├── timetable/         # Scheduling
+│   │   │   ├── attendance/        # Attendance tracking
+│   │   │   ├── events/            # Event management
+│   │   │   ├── grievances/        # Ticket system
+│   │   │   ├── maintenance/       # Facility requests
+│   │   │   ├── files/             # File storage
+│   │   │   └── notifications/     # Notifications
+│   │   ├── common/                # Guards, filters, decorators
+│   │   └── prisma/                # Database service
+│   ├── prisma/
+│   │   ├── schema.prisma          # Database schema (20+ models)
+│   │   └── seed.ts                # Test data seeder
+│   └── docker-compose.yml         # Local infrastructure
+│
+└── README.md                      # You are here!
+```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Node.js** 20.x or higher
+- **Docker** & Docker Compose (for backend)
+- **npm** or **pnpm**
+
+### 1️⃣ Clone the Repository
 
 ```bash
+git clone https://github.com/veerhooda/AIT_CMS.git
+cd AIT_CMS
+```
+
+### 2️⃣ Start the Backend
+
+```bash
+cd ait-cms-backend
+
+# Install dependencies
+npm install
+
+# Start database & cache
+docker-compose up -d
+
+# Setup database
+npm run db:push
+npm run db:seed
+
+# Start server
+npm run start:dev
+```
+
+**Backend running at:** `http://localhost:3000/api/v1`
+
+### 3️⃣ Start the Frontend
+
+```bash
+cd smart-campus-unified
+
 # Install dependencies
 npm install
 
 # Start development server
 npm run dev
-
-# Build for production
-npm run build
 ```
 
-Open http://localhost:5173 and login with:
+**Frontend running at:** `http://localhost:5173`
 
-- **Student**: `student@ait.edu` (any password)
-- **Faculty**: `faculty@ait.edu` (any password)
-- **Admin**: `admin@ait.edu` (any password)
+---
 
-## Project Structure
+## 🔑 Test Credentials
 
+| Role             | Email               | Password      |
+| ---------------- | ------------------- | ------------- |
+| 🔴 **Admin**     | `admin@ait.edu`     | `password123` |
+| 🟢 **Teacher**   | `faculty@ait.edu`   | `password123` |
+| 🔵 **Student**   | `student@ait.edu`   | `password123` |
+| 🟣 **Organizer** | `organizer@ait.edu` | `password123` |
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+
+| Technology     | Purpose      |
+| -------------- | ------------ |
+| React 19       | UI Framework |
+| TypeScript 5   | Type Safety  |
+| Vite 6         | Build Tool   |
+| TailwindCSS 3  | Styling      |
+| React Router 7 | Routing      |
+
+### Backend
+
+| Technology     | Purpose        |
+| -------------- | -------------- |
+| NestJS 10      | API Framework  |
+| TypeScript 5   | Type Safety    |
+| Prisma 7       | ORM            |
+| PostgreSQL 16  | Database       |
+| Redis 7        | Cache & Queues |
+| JWT + Passport | Authentication |
+
+---
+
+## 📖 Documentation
+
+| Document                                                        | Description                         |
+| --------------------------------------------------------------- | ----------------------------------- |
+| [Backend README](./ait-cms-backend/README.md)                   | API documentation, endpoints, setup |
+| [Frontend README](./smart-campus-unified/README.md)             | Component structure, pages, styling |
+| [Contributing Guide](./ait-cms-backend/CONTRIBUTING.md)         | How to contribute                   |
+| [API Endpoints](./ait-cms-backend/README.md#-api-documentation) | Complete API reference              |
+
+---
+
+## 🎯 Roadmap
+
+- [x] Core authentication & RBAC
+- [x] User management (Admin, Teacher, Student, Organizer)
+- [x] Timetable with conflict detection
+- [x] Attendance tracking & analytics
+- [x] Event management with registration
+- [x] Grievance & maintenance ticketing
+- [x] File storage integration
+- [x] Notification system
+- [ ] Real-time WebSocket updates
+- [ ] Mobile app (React Native)
+- [ ] AI-powered course recommendations
+- [ ] Video conferencing integration
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please see the [Contributing Guide](./ait-cms-backend/CONTRIBUTING.md) for details.
+
+```bash
+# Fork the repo, then:
+git checkout -b feature/your-feature
+git commit -m "feat: add your feature"
+git push origin feature/your-feature
+# Open a Pull Request
 ```
-src/
-├── components/shared/     # Reusable components (Sidebar, Header, etc.)
-├── context/               # React contexts (Auth, Theme)
-├── pages/
-│   ├── admin/             # Admin-only pages
-│   ├── faculty/           # Faculty-only pages
-│   ├── student/           # Student-only pages
-│   └── shared/            # Cross-role pages
-├── types/                 # TypeScript definitions
-└── styles/                # Global CSS
-```
 
-## License
+---
 
-MIT © AIT Education Group
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [Veer Hooda](https://github.com/veerhooda)**
+
+[![GitHub](https://img.shields.io/badge/GitHub-veerhooda-181717?style=for-the-badge&logo=github)](https://github.com/veerhooda)
+[![Stars](https://img.shields.io/github/stars/veerhooda/AIT_CMS?style=for-the-badge)](https://github.com/veerhooda/AIT_CMS/stargazers)
+
+</div>
