@@ -217,7 +217,7 @@ curl -H "Authorization: Bearer <accessToken>" \
 | `POST` | `/auth/login`   | User login             |
 | `POST` | `/auth/refresh` | Refresh tokens         |
 | `POST` | `/auth/logout`  | Logout current session |
-| `GET`  | `/auth/me`      | Get current user       |
+| `POST` | `/auth/me`      | Get current user       |
 
 </details>
 

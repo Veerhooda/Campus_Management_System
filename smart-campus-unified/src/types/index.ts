@@ -1,13 +1,40 @@
 // User and Authentication Types
 export interface User {
   id: string;
-  name: string;
   email: string;
-  role: UserRole;
-  avatar: string;
+  firstName: string;
+  lastName: string;
+  roles: UserRole[];
+  phone?: string;
+  avatar?: string;
 }
 
-export type UserRole = 'Student' | 'Faculty' | 'Admin';
+// Backend uses uppercase roles
+export type UserRole = 'STUDENT' | 'TEACHER' | 'ADMIN' | 'ORGANIZER';
+
+// Legacy role type for gradual migration (maps to new roles)
+export type LegacyRole = 'Student' | 'Faculty' | 'Admin';
+
+// API Response wrapper
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  timestamp: string;
+  message?: string;
+}
+
+// Pagination meta
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
 
 // Navigation Types
 export interface NavItem {
@@ -21,68 +48,82 @@ export interface NavItem {
 export interface Notification {
   id: string;
   title: string;
-  content: string;
-  category: NotificationCategory;
-  timestamp: string;
+  message: string;
+  type: NotificationType;
   isRead: boolean;
-  priority?: 'Low' | 'Medium' | 'High';
-  actionLabel?: string;
-  icon: string;
+  createdAt: string;
+  userId: string;
 }
 
+export type NotificationType = 'GENERAL' | 'ACADEMIC' | 'EVENT' | 'ALERT';
 export type NotificationCategory = 'All' | 'Academic' | 'Events' | 'System' | 'Community' | 'Unread';
 
 // Event Types
 export interface CampusEvent {
   id: string;
-  name: string;
+  title: string;
   description?: string;
-  date: string;
-  time: string;
-  venue: string;
+  startDateTime: string;
+  endDateTime: string;
+  venue?: string;
   status: EventStatus;
-  imageUrl?: string;
+  maxCapacity?: number;
+  organizerId: string;
 }
 
-export enum EventStatus {
-  DRAFT = 'Draft',
-  UPCOMING = 'Upcoming',
-  ACTIVE = 'Active',
-  COMPLETED = 'Completed',
-  CANCELLED = 'Cancelled',
-}
+export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED';
 
 // Attendance Types
 export interface Student {
   id: string;
-  rollNo: string;
-  name: string;
-  avatarUrl?: string;
-  status: AttendanceStatus;
-  attendancePercentage: number;
-}
-
-export enum AttendanceStatus {
-  PRESENT = 'Present',
-  ABSENT = 'Absent',
-  LATE = 'Late',
-  NOT_MARKED = 'Not Marked',
-}
-
-// Grievance/Ticket Types
-export interface Ticket {
-  id: string;
-  category: string;
-  subject: string;
-  description: string;
-  priority: TicketPriority;
-  status: TicketStatus;
-  date: string;
-  assignee?: {
-    name: string;
-    avatarUrl: string;
+  rollNumber: string;
+  userId: string;
+  classId: string;
+  enrollmentYear: number;
+  user?: {
+    firstName: string;
+    lastName: string;
+    email: string;
   };
 }
+
+export interface AttendanceRecord {
+  id: string;
+  studentId: string;
+  timetableSlotId: string;
+  date: string;
+  status: AttendanceStatus;
+}
+
+export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
+
+// Grievance/Ticket Types
+export interface Grievance {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: TicketStatus;
+  priority: string;
+  submittedById: string;
+  assignedToId?: string;
+  createdAt: string;
+  updatedAt: string;
+  resolution?: string;
+  submittedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  assignedTo?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
 
 export enum TicketPriority {
   LOW = 'Low',
@@ -91,13 +132,44 @@ export enum TicketPriority {
   CRITICAL = 'Critical',
 }
 
-export enum TicketStatus {
-  NEW = 'New',
-  IN_PROGRESS = 'In Progress',
-  RESOLVED = 'Resolved',
+// Timetable Types
+export type SlotType = 'LECTURE' | 'LAB' | 'TUTORIAL' | 'SEMINAR';
+
+export interface TimetableSlot {
+  id: string;
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime: string;
+  classId: string;
+  subjectId: string;
+  teacherId: string;
+  roomId?: string;
+  type?: SlotType;
+  subject?: {
+    name: string;
+    code: string;
+  };
+  teacher?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    user?: {
+      firstName: string;
+      lastName: string;
+    };
+  };
+  room?: {
+    name: string;
+    building: string;
+  };
+  class?: {
+    name: string;
+  };
 }
 
-// Timetable Types
+export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+
+// Legacy timetable event for UI compatibility
 export interface TimetableEvent {
   id: string;
   title: string;
@@ -121,10 +193,40 @@ export interface Metric {
   bgClass?: string;
 }
 
-// Deadline Types
-export interface Deadline {
+// Teacher Profile
+export interface Teacher {
   id: string;
-  title: string;
-  dueText: string;
-  dueColor: string;
+  userId: string;
+  employeeId: string;
+  departmentId?: string;
+  user?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+}
+
+// Class/Section
+export interface Class {
+  id: string;
+  name: string;
+  year: number;
+  section: string;
+  departmentId: string;
+}
+
+// Subject
+export interface Subject {
+  id: string;
+  name: string;
+  code: string;
+  credits: number;
+  departmentId: string;
+}
+
+// Department
+export interface Department {
+  id: string;
+  name: string;
+  code: string;
 }

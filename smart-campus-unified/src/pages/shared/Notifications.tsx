@@ -1,51 +1,85 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { notificationService } from '../../services';
+import { Notification as NotificationType } from '../../types';
 
-type NotificationCategory = 'All' | 'Academic' | 'Events' | 'System' | 'Unread';
+type NotificationCategory = 'All' | 'ACADEMIC' | 'EVENT' | 'SYSTEM' | 'ALERT' | 'Unread';
 
-interface Notification {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-  timestamp: string;
-  isRead: boolean;
-  icon: string;
-}
-
-const INITIAL_NOTIFICATIONS: Notification[] = [
-  { id: '1', title: 'Scheduled Maintenance: Library Portal Down', content: 'The library portal will be unavailable this Sunday from 2 AM to 4 AM.', category: 'System', timestamp: '10 mins ago', isRead: false, icon: 'warning' },
-  { id: '2', title: 'Grade Posted: CS101 Midterm', content: 'Results for the Computer Science 101 Midterm exam are now available.', category: 'Academic', timestamp: '2 hours ago', isRead: false, icon: 'school' },
-  { id: '3', title: 'Campus Fair Reminder', content: 'The Annual Science Fair starts in 1 hour at the Main Hall.', category: 'Events', timestamp: '3 hours ago', isRead: false, icon: 'event' },
-  { id: '4', title: 'Assignment Due: Physics Lab Report', content: 'Your assignment was successfully submitted.', category: 'Academic', timestamp: 'Yesterday', isRead: true, icon: 'assignment' },
-  { id: '5', title: 'Password Changed Successfully', content: 'Your account password was updated from a new device.', category: 'System', timestamp: 'Yesterday', isRead: true, icon: 'lock_reset' },
-];
+const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <div className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded ${className}`} />
+);
 
 const Notifications: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<NotificationCategory>('All');
 
-  const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        const data = await notificationService.getNotifications(1, 50);
+        setNotifications(data.data);
+      } catch (err) {
+        console.error('Failed to load notifications:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationService.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    }
   };
 
-  const handleMarkRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+  const handleMarkRead = async (id: string) => {
+    try {
+      await notificationService.markAsRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    } catch (err) {
+      console.error('Failed to mark as read:', err);
+    }
   };
 
   const filteredNotifications = notifications.filter(n => {
     if (filter === 'All') return true;
     if (filter === 'Unread') return !n.isRead;
-    return n.category === filter;
+    return n.type === filter;
   });
 
-  const filters: NotificationCategory[] = ['All', 'Unread', 'Academic', 'Events', 'System'];
+  const filters: NotificationCategory[] = ['All', 'Unread', 'ACADEMIC', 'EVENT', 'SYSTEM', 'ALERT'];
+  const filterLabels: Record<string, string> = {
+    All: 'All',
+    Unread: 'Unread',
+    ACADEMIC: 'Academic',
+    EVENT: 'Events',
+    SYSTEM: 'System',
+    ALERT: 'Alerts',
+  };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Academic': return 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400';
-      case 'Events': return 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400';
-      case 'System': return 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'ACADEMIC': return 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400';
+      case 'EVENT': return 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400';
+      case 'SYSTEM': return 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'ALERT': return 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400';
       default: return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'ACADEMIC': return 'school';
+      case 'EVENT': return 'event';
+      case 'SYSTEM': return 'settings';
+      case 'ALERT': return 'warning';
+      default: return 'info';
     }
   };
 
@@ -59,7 +93,8 @@ const Notifications: React.FC = () => {
         </div>
         <button 
           onClick={handleMarkAllRead}
-          className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          disabled={loading || notifications.every(n => n.isRead)}
+          className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined text-[18px]">done_all</span>
           Mark all as read
@@ -78,7 +113,7 @@ const Notifications: React.FC = () => {
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
-            {f}
+            {filterLabels[f]}
             {f === 'Unread' && (
               <span className="ml-2 px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">
                 {notifications.filter(n => !n.isRead).length}
@@ -90,7 +125,13 @@ const Notifications: React.FC = () => {
 
       {/* Notification List */}
       <div className="flex flex-col gap-3">
-        {filteredNotifications.length > 0 ? (
+        {loading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+          </div>
+        ) : filteredNotifications.length > 0 ? (
           filteredNotifications.map((notification) => (
             <div 
               key={notification.id}
@@ -102,20 +143,22 @@ const Notifications: React.FC = () => {
               }`}
             >
               <div className="flex gap-4">
-                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${getCategoryColor(notification.category)}`}>
-                  <span className="material-symbols-outlined">{notification.icon}</span>
+                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${getCategoryColor(notification.type)}`}>
+                  <span className="material-symbols-outlined">{getCategoryIcon(notification.type)}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start gap-2">
                     <h4 className={`text-sm font-bold ${notification.isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'}`}>
                       {notification.title}
                     </h4>
-                    <span className="text-xs text-slate-400 whitespace-nowrap">{notification.timestamp}</span>
+                    <span className="text-xs text-slate-400 whitespace-nowrap">
+                      {new Date(notification.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{notification.content}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{notification.message}</p>
                   <div className="mt-2 flex items-center gap-2">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getCategoryColor(notification.category)}`}>
-                      {notification.category}
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getCategoryColor(notification.type)}`}>
+                      {filterLabels[notification.type] || notification.type}
                     </span>
                     {!notification.isRead && (
                       <span className="w-2 h-2 bg-primary rounded-full" />

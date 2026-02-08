@@ -1,11 +1,23 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, getPrimaryRole, getDisplayName } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
+
+// Role display name mapping
+const getRoleDisplayName = (roles: string[]): string => {
+  const primary = getPrimaryRole(roles as any);
+  switch (primary) {
+    case 'STUDENT': return 'Student';
+    case 'TEACHER': return 'Faculty';
+    case 'ADMIN': return 'Admin';
+    case 'ORGANIZER': return 'Organizer';
+    default: return primary;
+  }
+};
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user } = useAuth();
@@ -28,6 +40,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   };
 
   const breadcrumbs = getBreadcrumb();
+  const displayName = user ? getDisplayName(user) : 'User';
+  const roleDisplay = user ? getRoleDisplayName(user.roles) : '';
+  const initials = user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || 'U' : 'U';
 
   return (
     <header className="h-16 min-h-16 flex items-center justify-between px-4 md:px-6 bg-white dark:bg-surface-dark border-b border-slate-200 dark:border-slate-800">
@@ -97,14 +112,12 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         {/* User avatar (desktop only) */}
         {user && (
           <div className="hidden md:flex items-center gap-3 cursor-pointer p-1 pr-3 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-            <img 
-              src={user.avatar} 
-              alt={user.name}
-              className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 object-cover"
-            />
+            <div className="w-8 h-8 rounded-full bg-primary/10 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-primary font-bold text-sm">
+              {initials}
+            </div>
             <div className="hidden lg:block">
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-none">{user.name}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{user.role}</p>
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-none">{displayName}</p>
+              <p className="text-xs text-slate-400 mt-0.5">{roleDisplay}</p>
             </div>
             <span className="material-symbols-outlined text-slate-400 text-[18px]">expand_more</span>
           </div>

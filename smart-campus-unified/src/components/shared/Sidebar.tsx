@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, getPrimaryRole, getDisplayName } from '../../context/AuthContext';
 import { NavItem, UserRole } from '../../types';
 
 interface SidebarProps {
@@ -10,8 +10,10 @@ interface SidebarProps {
 
 // Navigation items by role
 const getNavigationItems = (role: UserRole): NavItem[] => {
+  const baseRoute = role === 'TEACHER' ? 'faculty' : role.toLowerCase();
+  
   const commonItems: NavItem[] = [
-    { icon: 'notifications', label: 'Notifications', path: `/${role.toLowerCase()}/notifications` },
+    { icon: 'notifications', label: 'Notifications', path: `/${baseRoute}/notifications` },
   ];
 
   const studentItems: NavItem[] = [
@@ -20,9 +22,7 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
     { icon: 'calendar_month', label: 'Schedule', path: '/student/schedule' },
     { icon: 'assignment', label: 'Assignments', path: '/student/assignments' },
     { icon: 'pie_chart', label: 'Attendance', path: '/student/attendance' },
-    { icon: 'payments', label: 'Finances', path: '/student/finances' },
     ...commonItems,
-    { icon: 'settings', label: 'Settings', path: '/student/settings' },
   ];
 
   const facultyItems: NavItem[] = [
@@ -31,33 +31,47 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
     { icon: 'calendar_month', label: 'Schedule', path: '/faculty/schedule' },
     { icon: 'check_circle', label: 'Mark Attendance', path: '/faculty/attendance' },
     { icon: 'grading', label: 'Grading', path: '/faculty/grading' },
-    { icon: 'event', label: 'Events', path: '/faculty/events' },
     ...commonItems,
-    { icon: 'settings', label: 'Settings', path: '/faculty/settings' },
   ];
 
   const adminItems: NavItem[] = [
     { icon: 'grid_view', label: 'Dashboard', path: '/admin/dashboard' },
     { icon: 'people', label: 'User Management', path: '/admin/users' },
-    { icon: 'school', label: 'Faculty', path: '/admin/faculty' },
-    { icon: 'apartment', label: 'Facilities', path: '/admin/facilities' },
     { icon: 'event', label: 'Events', path: '/admin/events' },
-    { icon: 'celebration', label: 'Organizer Portal', path: '/admin/organizer' },
     { icon: 'support_agent', label: 'Grievances', path: '/admin/grievances' },
+    { icon: 'celebration', label: 'Organizer Portal', path: '/admin/organizer' },
     ...commonItems,
-    { icon: 'history', label: 'Audit Logs', path: '/admin/logs' },
-    { icon: 'settings', label: 'Settings', path: '/admin/settings' },
+  ];
+
+  const organizerItems: NavItem[] = [
+    { icon: 'grid_view', label: 'Dashboard', path: '/organizer/dashboard' },
+    { icon: 'event', label: 'Events', path: '/organizer/events' },
+    { icon: 'group', label: 'Registrations', path: '/organizer/registrations' },
+    ...commonItems,
   ];
 
   switch (role) {
-    case 'Student':
+    case 'STUDENT':
       return studentItems;
-    case 'Faculty':
+    case 'TEACHER':
       return facultyItems;
-    case 'Admin':
+    case 'ADMIN':
       return adminItems;
+    case 'ORGANIZER':
+      return organizerItems;
     default:
       return studentItems;
+  }
+};
+
+// Role display name mapping
+const getRoleDisplayName = (role: UserRole): string => {
+  switch (role) {
+    case 'STUDENT': return 'Student';
+    case 'TEACHER': return 'Faculty';
+    case 'ADMIN': return 'Admin';
+    case 'ORGANIZER': return 'Organizer';
+    default: return role;
   }
 };
 
@@ -67,7 +81,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
 
   if (!user) return null;
 
-  const navItems = getNavigationItems(user.role);
+  const primaryRole = getPrimaryRole(user.roles);
+  const navItems = getNavigationItems(primaryRole);
+  const displayName = getDisplayName(user);
+  const roleDisplay = getRoleDisplayName(primaryRole);
+  
+  // Generate avatar from initials
+  const initials = `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || 'U';
 
   return (
     <>
@@ -92,7 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
           </div>
           <div>
             <span className="font-bold text-lg text-slate-800 dark:text-white tracking-tight block">AIT Portal</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user.role} View</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">{roleDisplay} View</span>
           </div>
         </div>
 
@@ -123,18 +143,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
         {/* User Section */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl mb-3">
-            <img 
-              src={user.avatar} 
-              className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-700 object-cover" 
-              alt={user.name} 
-            />
+            <div className="w-10 h-10 rounded-full bg-primary/10 border-2 border-white dark:border-slate-700 flex items-center justify-center text-primary font-bold">
+              {initials}
+            </div>
             <div className="overflow-hidden flex-1">
-              <p className="font-bold text-sm text-slate-800 dark:text-white truncate">{user.name}</p>
-              <p className="text-xs text-primary font-medium">{user.role}</p>
+              <p className="font-bold text-sm text-slate-800 dark:text-white truncate">{displayName}</p>
+              <p className="text-xs text-primary font-medium">{roleDisplay}</p>
             </div>
           </div>
           <button 
-            onClick={logout}
+            onClick={() => logout()}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 font-bold text-sm hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>

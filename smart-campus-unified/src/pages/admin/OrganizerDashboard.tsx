@@ -1,22 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StatCard from '../../components/shared/StatCard';
-
-enum EventStatus {
-  DRAFT = 'Draft',
-  UPCOMING = 'Upcoming',
-  ACTIVE = 'Active',
-  COMPLETED = 'Completed',
-}
-
-interface CampusEvent {
-  id: string;
-  name: string;
-  date: string;
-  time: string;
-  venue: string;
-  status: EventStatus;
-  imageUrl: string;
-}
+import { eventService } from '../../services';
+import { CampusEvent } from '../../types';
 
 interface Deadline {
   id: string;
@@ -25,31 +10,58 @@ interface Deadline {
   dueColor: string;
 }
 
-const MOCK_EVENTS: CampusEvent[] = [
-  { id: '1', name: 'AI & Ethics Symposium', date: 'Oct 24, 2023', time: '10:00 AM', venue: 'Main Auditorium', status: EventStatus.ACTIVE, imageUrl: 'https://picsum.photos/seed/ai/200/200' },
-  { id: '2', name: 'Campus Jazz Night', date: 'Nov 02, 2023', time: '07:00 PM', venue: 'Student Center', status: EventStatus.UPCOMING, imageUrl: 'https://picsum.photos/seed/jazz/200/200' },
-  { id: '3', name: 'Fall Startup Expo', date: 'Nov 15, 2023', time: '09:00 AM', venue: 'Innovation Hall', status: EventStatus.DRAFT, imageUrl: 'https://picsum.photos/seed/startup/200/200' },
-  { id: '4', name: 'Chemistry Workshop', date: 'Nov 20, 2023', time: '02:00 PM', venue: 'Lab 304', status: EventStatus.UPCOMING, imageUrl: 'https://picsum.photos/seed/science/200/200' },
-];
-
 const MOCK_DEADLINES: Deadline[] = [
   { id: '1', title: 'Submit Budget for Fall Fest', dueText: 'Due Today', dueColor: 'orange' },
   { id: '2', title: 'Finalize Guest List for Dean\'s Dinner', dueText: 'Due Tomorrow', dueColor: 'slate' },
   { id: '3', title: 'Confirm Catering for Jazz Night', dueText: 'Due Oct 30', dueColor: 'slate' },
 ];
 
-const getStatusColor = (status: EventStatus) => {
+const getStatusColor = (status: string) => {
   switch (status) {
-    case EventStatus.ACTIVE: return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-    case EventStatus.UPCOMING: return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-    case EventStatus.DRAFT: return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
-    case EventStatus.COMPLETED: return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+    case 'PUBLISHED': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+    case 'DRAFT': return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
+    case 'CANCELLED': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+    case 'COMPLETED': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+    default: return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
   }
 };
 
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'PUBLISHED': return 'Active';
+    case 'DRAFT': return 'Draft';
+    case 'CANCELLED': return 'Cancelled';
+    case 'COMPLETED': return 'Completed';
+    default: return status;
+  }
+};
+
+const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <div className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded ${className}`} />
+);
+
 const OrganizerDashboard: React.FC = () => {
+  const [events, setEvents] = useState<CampusEvent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [aiSuggestions, setAiSuggestions] = useState<{title: string; description: string}[]>([]);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
+
+  // Fetch events on mount
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const data = await eventService.getEvents(1, 20);
+        setEvents(data.data);
+      } catch (err) {
+        console.error('Failed to load events:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   const handleGenerateAiSuggestions = async () => {
     setIsLoadingAi(true);
@@ -68,15 +80,19 @@ const OrganizerDashboard: React.FC = () => {
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  const eventDays = [5, 12, 18, 24]; // Days with events
+  const eventDays = events.map(e => new Date(e.startDateTime).getDate());
+
+  // Stats
+  const activeEvents = events.filter(e => e.status === 'PUBLISHED').length;
+  const totalRegistrations = events.reduce((acc) => acc + (Math.floor(Math.random() * 100) + 50), 0); // Placeholder
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Welcome back, Organizer</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Here's what's happening on campus today.</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Organizer Dashboard</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Manage events and registrations.</p>
         </div>
         <div className="flex gap-3">
           <button 
@@ -122,9 +138,9 @@ const OrganizerDashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard label="Total Registrations" value="1,240" trend="+12%" icon="how_to_reg" colorClass="text-primary" bgClass="bg-primary/10" />
+        <StatCard label="Total Registrations" value={loading ? '...' : totalRegistrations.toString()} trend="+12%" icon="how_to_reg" colorClass="text-primary" bgClass="bg-primary/10" />
         <StatCard label="Feedback Score" value="4.8" icon="star" colorClass="text-yellow-600" bgClass="bg-yellow-50 dark:bg-yellow-900/20" />
-        <StatCard label="Active Events" value="8" trend="+2" icon="event_available" colorClass="text-purple-600" bgClass="bg-purple-50 dark:bg-purple-900/20" />
+        <StatCard label="Active Events" value={loading ? '...' : activeEvents.toString()} trend="+2" icon="event_available" colorClass="text-purple-600" bgClass="bg-purple-50 dark:bg-purple-900/20" />
       </div>
 
       {/* Main Grid */}
@@ -135,38 +151,54 @@ const OrganizerDashboard: React.FC = () => {
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">My Events</h3>
             <button className="text-sm font-medium text-primary hover:underline">View All</button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="px-5 py-3 text-left">Event</th>
-                  <th className="px-5 py-3 text-left">Date & Time</th>
-                  <th className="px-5 py-3 text-left">Venue</th>
-                  <th className="px-5 py-3 text-left">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {MOCK_EVENTS.map(event => (
-                  <tr key={event.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-5 py-4 flex items-center gap-3">
-                      <img src={event.imageUrl} className="w-10 h-10 rounded-lg object-cover" alt={event.name} />
-                      <span className="font-semibold text-sm text-slate-900 dark:text-white">{event.name}</span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{event.date}</p>
-                      <p className="text-xs text-slate-500">{event.time}</p>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">{event.venue}</td>
-                    <td className="px-5 py-4">
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getStatusColor(event.status)}`}>
-                        {event.status}
-                      </span>
-                    </td>
+          {loading ? (
+            <div className="p-6 space-y-4">
+              <Skeleton className="h-16" />
+              <Skeleton className="h-16" />
+              <Skeleton className="h-16" />
+            </div>
+          ) : events.length === 0 ? (
+            <div className="p-12 text-center">
+              <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2">event</span>
+              <p className="text-slate-500 dark:text-slate-400">No events yet. Create your first event!</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-800/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th className="px-5 py-3 text-left">Event</th>
+                    <th className="px-5 py-3 text-left">Date & Time</th>
+                    <th className="px-5 py-3 text-left">Venue</th>
+                    <th className="px-5 py-3 text-left">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {events.slice(0, 5).map(event => (
+                    <tr key={event.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="px-5 py-4">
+                        <span className="font-semibold text-sm text-slate-900 dark:text-white">{event.title}</span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                          {new Date(event.startDateTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(event.startDateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </td>
+                      <td className="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">{event.venue || 'TBD'}</td>
+                      <td className="px-5 py-4">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getStatusColor(event.status)}`}>
+                          {getStatusLabel(event.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Right Column */}

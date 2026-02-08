@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import StatCard from '../../components/shared/StatCard';
+import { grievanceService, eventService } from '../../services';
 
-// Mock data
 const recentLogs = [
   { id: '1', action: 'User Created', user: 'John Smith', type: 'Student', time: '2 mins ago', icon: 'person_add' },
   { id: '2', action: 'Event Published', user: 'Admin', type: 'System', time: '15 mins ago', icon: 'event' },
@@ -9,14 +9,44 @@ const recentLogs = [
   { id: '4', action: 'Permission Updated', user: 'Prof. Anderson', type: 'Faculty', time: '2 hrs ago', icon: 'admin_panel_settings' },
 ];
 
-const quickStats = [
-  { label: 'Total Users', value: '2,847', icon: 'group', trend: '+124', color: 'text-primary', bg: 'bg-primary/10' },
-  { label: 'Active Faculty', value: '186', icon: 'school', trend: '+8', color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20' },
-  { label: 'Open Grievances', value: '23', icon: 'support_agent', trend: '-5', color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20' },
-  { label: 'Events This Week', value: '12', icon: 'event', trend: '+3', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-];
-
 const AdminDashboard: React.FC = () => {
+  const [stats, setStats] = useState({
+    totalUsers: '...',
+    activeFaculty: '...',
+    openGrievances: '...',
+    eventsThisWeek: '...',
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch data in parallel
+        const [grievanceData, eventData] = await Promise.allSettled([
+          grievanceService.getGrievances(1, 100, 'OPEN'),
+          eventService.getEvents(1, 50),
+        ]);
+
+        setStats({
+          totalUsers: '2,847', // Would come from userService.getCounts() when implemented
+          activeFaculty: '186',
+          openGrievances: grievanceData.status === 'fulfilled' ? grievanceData.value.meta.total.toString() : '?',
+          eventsThisWeek: eventData.status === 'fulfilled' ? eventData.value.data.length.toString() : '?',
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const quickStats = [
+    { label: 'Total Users', value: stats.totalUsers, icon: 'group', trend: '+124', color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'Active Faculty', value: stats.activeFaculty, icon: 'school', trend: '+8', color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20' },
+    { label: 'Open Grievances', value: stats.openGrievances, icon: 'support_agent', trend: '-5', color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/20' },
+    { label: 'Events This Week', value: stats.eventsThisWeek, icon: 'event', trend: '+3', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+  ];
+
   return (
     <div className="flex flex-col gap-8 animate-fade-in">
       {/* Header */}

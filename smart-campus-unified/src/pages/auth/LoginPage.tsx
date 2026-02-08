@@ -22,10 +22,20 @@ const LoginPage: React.FC = () => {
       // Navigation is handled by App.tsx based on role
       navigate('/');
     } catch (err) {
-      setError('Login failed. Please try again.');
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Login failed. Please check your credentials.');
+      }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Quick login helper for demo
+  const handleQuickLogin = (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword('password123');
   };
 
   return (
@@ -66,7 +76,7 @@ const LoginPage: React.FC = () => {
           </div>
 
           <div className="text-white/60 text-sm font-medium flex justify-between items-end">
-            <p>© 2024 AIT Education Group. All rights reserved.</p>
+            <p>© 2026 AIT Education Group. All rights reserved.</p>
             <div className="flex gap-4">
               <a className="hover:text-white transition-colors" href="#">Privacy</a>
               <a className="hover:text-white transition-colors" href="#">Terms</a>
@@ -96,26 +106,27 @@ const LoginPage: React.FC = () => {
 
           {/* Error message */}
           {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
-              {error}
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm flex items-start gap-2">
+              <span className="material-symbols-outlined text-[18px] mt-0.5">error</span>
+              <span>{error}</span>
             </div>
           )}
 
           {/* Login Form */}
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
             <label className="flex flex-col gap-1.5">
-              <span className="text-slate-800 dark:text-slate-200 text-sm font-semibold">Email or Roll Number</span>
+              <span className="text-slate-800 dark:text-slate-200 text-sm font-semibold">Email</span>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                  <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>badge</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>mail</span>
                 </div>
                 <input 
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-slate-900 dark:text-white placeholder:text-slate-400 pl-10 pr-4 h-12 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none" 
-                  placeholder="e.g. student@ait.edu or 210456" 
-                  type="text"
+                  placeholder="e.g. admin@ait.edu" 
+                  type="email"
                 />
               </div>
             </label>
@@ -151,7 +162,7 @@ const LoginPage: React.FC = () => {
 
             <button 
               disabled={isLoading}
-              className="mt-2 w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70" 
+              className="mt-2 w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-md shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed" 
               type="submit"
             >
               {isLoading ? (
@@ -165,13 +176,26 @@ const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Role Detection Hint */}
-          <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
-            <span className="material-symbols-outlined text-primary mt-0.5" style={{ fontSize: '18px' }}>info</span>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              System automatically detects <strong className="text-primary font-medium">Student</strong>, <strong className="text-primary font-medium">Faculty</strong>, or <strong className="text-primary font-medium">Admin</strong> access based on your credentials. 
-              <br/><span className="text-slate-400 text-[11px]">(Hint: Use "admin" or "faculty" in email for different roles)</span>
-            </p>
+          {/* Quick Login Buttons */}
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-slate-400 text-center">Quick login for demo:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: 'Admin', email: 'admin@ait.edu', color: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
+                { label: 'Faculty', email: 'faculty@ait.edu', color: 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' },
+                { label: 'Student', email: 'student@ait.edu', color: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' },
+                { label: 'Organizer', email: 'organizer@ait.edu', color: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400' },
+              ].map((demo) => (
+                <button
+                  key={demo.label}
+                  type="button"
+                  onClick={() => handleQuickLogin(demo.email)}
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold ${demo.color} hover:opacity-80 transition-opacity`}
+                >
+                  {demo.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Footer Links */}

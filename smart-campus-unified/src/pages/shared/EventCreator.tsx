@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { eventService } from '../../services';
 
 enum FormStep {
   BASIC_DETAILS = 1,
@@ -10,39 +12,82 @@ interface EventData {
   description: string;
   startDate: string;
   endDate: string;
-  isAllDay: boolean;
-  building: string;
-  room: string;
+  venue: string;
+  maxParticipants: number | undefined;
   audience: string[];
 }
 
-const BUILDINGS = [
-  { id: 'lib', name: 'Main Library', rooms: ['Grand Auditorium', 'Conference Room A', 'Study Hall 1'] },
-  { id: 'sci', name: 'Science Block', rooms: ['Lab 101', 'Lab 102', 'Lecture Hall 1'] },
-  { id: 'admin', name: 'Admin Building', rooms: ['Board Room', 'Meeting Room 1', 'Meeting Room 2'] },
-];
-
 const EventCreator: React.FC = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState<FormStep>(FormStep.BASIC_DETAILS);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<EventData>({
     title: '',
     description: '',
     startDate: '',
     endDate: '',
-    isAllDay: false,
-    building: 'Main Library',
-    room: '',
+    venue: '',
+    maxParticipants: undefined,
     audience: ['All Students'],
   });
 
   const updateField = <K extends keyof EventData>(field: K, value: EventData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setError(null);
   };
 
-  const selectedBuilding = BUILDINGS.find(b => b.name === formData.building);
+  const validateStep1 = () => {
+    if (!formData.title.trim()) {
+      setError('Event title is required');
+      return false;
+    }
+    if (!formData.startDate) {
+      setError('Start date is required');
+      return false;
+    }
+    if (!formData.endDate) {
+      setError('End date is required');
+      return false;
+    }
+    if (new Date(formData.endDate) < new Date(formData.startDate)) {
+      setError('End date must be after start date');
+      return false;
+    }
+    return true;
+  };
 
-  const handleSubmit = () => {
-    alert('Event Published Successfully!');
+  const handleSubmit = async (publish: boolean = false) => {
+    if (!validateStep1()) return;
+
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      // Create the event
+      const event = await eventService.createEvent({
+        title: formData.title,
+        description: formData.description || undefined,
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString(),
+        venue: formData.venue || undefined,
+        maxParticipants: formData.maxParticipants,
+      });
+
+      // Publish if requested
+      if (publish) {
+        await eventService.publishEvent(event.id);
+      }
+
+      // Navigate back to dashboard
+      navigate(-1);
+    } catch (err: unknown) {
+      console.error('Failed to create event:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create event. Please try again.';
+      setError(errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -62,17 +107,21 @@ const EventCreator: React.FC = () => {
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Create New Event</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Schedule activities and reserve venues for the campus community.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-          <span className="material-symbols-outlined text-[18px]">visibility</span>
-          Preview
-        </button>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-300 flex items-center gap-2">
+          <span className="material-symbols-outlined">error</span>
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Step Indicator */}
       <div className="flex items-center gap-4">
         {[
           { step: FormStep.BASIC_DETAILS, label: 'Basic Details' },
-          { step: FormStep.VENUE_LOGISTICS, label: 'Venue & Audience' },
+          { step: FormStep.VENUE_LOGISTICS, label: 'Venue & Options' },
         ].map((item, idx) => (
           <React.Fragment key={item.step}>
             <div className="flex items-center gap-2">
@@ -145,49 +194,36 @@ const EventCreator: React.FC = () => {
                   />
                 </div>
               </div>
-
-              <div className="flex items-center gap-2">
-                <input 
-                  id="all-day" 
-                  type="checkbox" 
-                  className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
-                  checked={formData.isAllDay}
-                  onChange={(e) => updateField('isAllDay', e.target.checked)}
-                />
-                <label htmlFor="all-day" className="text-sm text-slate-900 dark:text-white cursor-pointer">All day event</label>
-              </div>
             </div>
           )}
 
           {step === FormStep.VENUE_LOGISTICS && (
             <div className="p-6 md:p-8 flex flex-col gap-6 bg-slate-50 dark:bg-slate-800/50">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Venue & Audience</h3>
-                <p className="text-sm text-slate-500">Select where the event will happen and who should attend.</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Venue & Options</h3>
+                <p className="text-sm text-slate-500">Configure additional event settings.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-slate-900 dark:text-white">Building</label>
-                  <select 
-                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    value={formData.building}
-                    onChange={(e) => updateField('building', e.target.value)}
-                  >
-                    {BUILDINGS.map(b => <option key={b.id}>{b.name}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-slate-900 dark:text-white">Room / Hall</label>
-                  <select 
-                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    value={formData.room}
-                    onChange={(e) => updateField('room', e.target.value)}
-                  >
-                    <option value="">Select a room</option>
-                    {selectedBuilding?.rooms.map(r => <option key={r}>{r}</option>)}
-                  </select>
-                </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-slate-900 dark:text-white">Venue</label>
+                <input 
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                  placeholder="e.g., Main Auditorium, Room 101, etc."
+                  value={formData.venue}
+                  onChange={(e) => updateField('venue', e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-slate-900 dark:text-white">Max Participants</label>
+                <input 
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                  type="number"
+                  min="1"
+                  placeholder="Leave empty for unlimited"
+                  value={formData.maxParticipants || ''}
+                  onChange={(e) => updateField('maxParticipants', e.target.value ? parseInt(e.target.value) : undefined)}
+                />
               </div>
 
               <div className="flex flex-col gap-2">
@@ -226,7 +262,11 @@ const EventCreator: React.FC = () => {
 
           {/* Footer */}
           <div className="p-6 md:p-8 border-t border-slate-200 dark:border-slate-700 flex flex-col-reverse md:flex-row justify-between items-center gap-4 bg-white dark:bg-surface-dark">
-            <button type="button" className="text-slate-500 font-medium text-sm hover:text-slate-700 transition-colors">
+            <button 
+              type="button" 
+              onClick={() => navigate(-1)}
+              className="text-slate-500 font-medium text-sm hover:text-slate-700 transition-colors"
+            >
               Cancel
             </button>
             <div className="flex w-full md:w-auto gap-4">
@@ -238,16 +278,37 @@ const EventCreator: React.FC = () => {
               >
                 Back
               </button>
-              <button 
-                type="button"
-                onClick={() => {
-                  if (step === FormStep.BASIC_DETAILS) setStep(FormStep.VENUE_LOGISTICS);
-                  else handleSubmit();
-                }}
-                className="flex-1 md:flex-none px-8 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm shadow-md hover:bg-primary/90 transition-colors"
-              >
-                {step === FormStep.BASIC_DETAILS ? 'Next Step' : 'Publish Event'}
-              </button>
+              {step === FormStep.BASIC_DETAILS ? (
+                <button 
+                  type="button"
+                  onClick={() => {
+                    if (validateStep1()) setStep(FormStep.VENUE_LOGISTICS);
+                  }}
+                  className="flex-1 md:flex-none px-8 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm shadow-md hover:bg-primary/90 transition-colors"
+                >
+                  Next Step
+                </button>
+              ) : (
+                <>
+                  <button 
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => handleSubmit(false)}
+                    className="flex-1 md:flex-none px-6 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                  >
+                    Save as Draft
+                  </button>
+                  <button 
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => handleSubmit(true)}
+                    className="flex-1 md:flex-none px-8 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm shadow-md hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {submitting && <span className="material-symbols-outlined animate-spin text-[18px]">autorenew</span>}
+                    {submitting ? 'Publishing...' : 'Publish Event'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </form>

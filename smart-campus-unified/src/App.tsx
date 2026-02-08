@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
+import { useAuth, getPrimaryRole } from './context/AuthContext';
+import { UserRole } from './types';
 
 // Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -34,8 +35,11 @@ const LoadingSpinner: React.FC = () => (
 );
 
 // Protected route wrapper
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: UserRole[] }> = ({ 
+  children, 
+  allowedRoles 
+}) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -43,6 +47,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check role access if roles are specified
+  if (allowedRoles && user) {
+    const hasAccess = user.roles.some(role => allowedRoles.includes(role));
+    if (!hasAccess) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return <>{children}</>;
@@ -54,13 +66,17 @@ const RoleBasedRedirect: React.FC = () => {
   
   if (!user) return <Navigate to="/login" replace />;
   
-  switch (user.role) {
-    case 'Student':
+  const primaryRole = getPrimaryRole(user.roles);
+  
+  switch (primaryRole) {
+    case 'STUDENT':
       return <Navigate to="/student/dashboard" replace />;
-    case 'Faculty':
+    case 'TEACHER':
       return <Navigate to="/faculty/dashboard" replace />;
-    case 'Admin':
+    case 'ADMIN':
       return <Navigate to="/admin/dashboard" replace />;
+    case 'ORGANIZER':
+      return <Navigate to="/organizer/dashboard" replace />;
     default:
       return <Navigate to="/login" replace />;
   }
@@ -90,22 +106,87 @@ const App: React.FC = () => {
         }
       >
         {/* Student Routes */}
-        <Route path="/student/dashboard" element={<StudentDashboard />} />
-        <Route path="/student/schedule" element={<Schedule />} />
-        <Route path="/student/notifications" element={<Notifications />} />
+        <Route path="/student/dashboard" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/schedule" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <Schedule />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/notifications" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <Notifications />
+          </ProtectedRoute>
+        } />
 
-        {/* Faculty Routes */}
-        <Route path="/faculty/dashboard" element={<FacultyDashboard />} />
-        <Route path="/faculty/attendance" element={<AttendanceMarking />} />
-        <Route path="/faculty/schedule" element={<Schedule />} />
-        <Route path="/faculty/notifications" element={<Notifications />} />
+        {/* Faculty/Teacher Routes */}
+        <Route path="/faculty/dashboard" element={
+          <ProtectedRoute allowedRoles={['TEACHER']}>
+            <FacultyDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/faculty/attendance" element={
+          <ProtectedRoute allowedRoles={['TEACHER']}>
+            <AttendanceMarking />
+          </ProtectedRoute>
+        } />
+        <Route path="/faculty/schedule" element={
+          <ProtectedRoute allowedRoles={['TEACHER']}>
+            <Schedule />
+          </ProtectedRoute>
+        } />
+        <Route path="/faculty/notifications" element={
+          <ProtectedRoute allowedRoles={['TEACHER']}>
+            <Notifications />
+          </ProtectedRoute>
+        } />
 
         {/* Admin Routes */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/grievances" element={<GrievanceManagement />} />
-        <Route path="/admin/events" element={<EventCreator />} />
-        <Route path="/admin/organizer" element={<OrganizerDashboard />} />
-        <Route path="/admin/notifications" element={<Notifications />} />
+        <Route path="/admin/dashboard" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/grievances" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <GrievanceManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/events" element={
+          <ProtectedRoute allowedRoles={['ADMIN', 'ORGANIZER']}>
+            <EventCreator />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/organizer" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <OrganizerDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/notifications" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Notifications />
+          </ProtectedRoute>
+        } />
+
+        {/* Organizer Routes */}
+        <Route path="/organizer/dashboard" element={
+          <ProtectedRoute allowedRoles={['ORGANIZER']}>
+            <OrganizerDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/organizer/events" element={
+          <ProtectedRoute allowedRoles={['ORGANIZER']}>
+            <EventCreator />
+          </ProtectedRoute>
+        } />
+        <Route path="/organizer/notifications" element={
+          <ProtectedRoute allowedRoles={['ORGANIZER']}>
+            <Notifications />
+          </ProtectedRoute>
+        } />
       </Route>
 
       {/* Default redirects */}

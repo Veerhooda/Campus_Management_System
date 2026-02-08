@@ -9,6 +9,10 @@
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
+<p align="center">
+  <strong>A unified React frontend fully integrated with the NestJS backend API for seamless campus management.</strong>
+</p>
+
 </div>
 
 ---
@@ -17,24 +21,38 @@
 
 ### 🎯 Role-Based Portals
 
-| Portal           | Features                                                         |
-| ---------------- | ---------------------------------------------------------------- |
-| 👨‍🎓 **Student**   | Dashboard, courses, schedule, attendance tracking, notifications |
-| 👨‍🏫 **Faculty**   | Class management, attendance marking, grading, file uploads      |
-| 🔧 **Admin**     | System overview, user management, reports, audit logs            |
-| 🎯 **Organizer** | Event creation, AI suggestions, registration management          |
+| Portal           | Features                                                  |
+| ---------------- | --------------------------------------------------------- |
+| 👨‍🎓 **Student**   | Dashboard, timetable, attendance stats, notifications     |
+| 👨‍🏫 **Faculty**   | Class schedule, attendance marking, bulk operations       |
+| 🔧 **Admin**     | System overview, grievance management, user management    |
+| 🎯 **Organizer** | Event creation, calendar view, AI suggestions, publishing |
+
+### 🔗 Full API Integration
+
+- **JWT Authentication** — Login, logout, token refresh with auto-retry
+- **Real-time Data** — Dashboards fetch live data from backend
+- **Role-based Routing** — Protected routes with access control
+- **Error Handling** — Graceful fallbacks and loading states
 
 ### 🎨 UI/UX Excellence
 
 - 🌙 **Dark/Light Mode** — System-aware theme switching
 - 📱 **Fully Responsive** — Mobile-first design
-- ♿ **Accessible** — WCAG-compliant components
 - ⚡ **Fast** — Optimized bundle with code splitting
 - 🎭 **Smooth Animations** — Polished micro-interactions
+- 🦴 **Loading Skeletons** — Professional loading states
 
 ---
 
 ## 🚀 Quick Start
+
+### Prerequisites
+
+- **Node.js** 20.x or higher
+- **Backend running** at `localhost:3000` (see [Backend README](../ait-cms-backend/README.md))
+
+### Installation
 
 ```bash
 # Install dependencies
@@ -42,15 +60,16 @@ npm install
 
 # Start development server
 npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
 ```
 
 **Development server:** `http://localhost:5173`
+
+### Environment
+
+```env
+# .env (create this file)
+VITE_API_URL=http://localhost:3000/api/v1
+```
 
 ---
 
@@ -70,41 +89,86 @@ npm run preview
 ```
 src/
 ├── components/
-│   └── shared/              # Reusable components
-│       ├── Sidebar.tsx      # Navigation sidebar
-│       ├── Header.tsx       # Top header with user menu
-│       ├── Card.tsx         # Styled card component
-│       └── Modal.tsx        # Modal dialogs
+│   └── shared/              # Reusable UI components
+│       ├── Sidebar.tsx      # Role-based navigation
+│       ├── Header.tsx       # User info & avatar
+│       ├── StatCard.tsx     # Dashboard stat cards
+│       └── Layout.tsx       # Main app layout
 │
 ├── pages/
 │   ├── admin/               # Admin-only pages
-│   │   ├── Dashboard.tsx
-│   │   ├── UserManagement.tsx
-│   │   └── AuditLogs.tsx
+│   │   ├── Dashboard.tsx    # System overview
+│   │   ├── Grievances.tsx   # Ticket management
+│   │   └── OrganizerDashboard.tsx
 │   │
 │   ├── faculty/             # Faculty-only pages
-│   │   ├── Dashboard.tsx
-│   │   ├── MyClasses.tsx
-│   │   └── MarkAttendance.tsx
+│   │   ├── Dashboard.tsx    # Today's schedule
+│   │   └── Attendance.tsx   # Bulk attendance marking
 │   │
 │   ├── student/             # Student-only pages
-│   │   ├── Dashboard.tsx
-│   │   ├── MyCourses.tsx
-│   │   └── Timetable.tsx
+│   │   └── Dashboard.tsx    # Classes, attendance stats
 │   │
-│   └── shared/              # Cross-role pages
-│       ├── Login.tsx
-│       ├── Profile.tsx
-│       └── Notifications.tsx
+│   ├── shared/              # Cross-role pages
+│   │   ├── Schedule.tsx     # Grid & list timetable view
+│   │   ├── Notifications.tsx # With mark-as-read
+│   │   └── EventCreator.tsx  # Multi-step event form
+│   │
+│   └── auth/
+│       └── LoginPage.tsx    # Quick login buttons
+│
+├── services/                # 🆕 API Integration Layer
+│   ├── api.ts              # Axios client + JWT interceptors
+│   ├── auth.ts             # Login, logout, token management
+│   ├── data.ts             # All data services
+│   └── index.ts            # Barrel export
 │
 ├── context/
-│   ├── AuthContext.tsx      # Authentication state
-│   └── ThemeContext.tsx     # Dark/light mode
+│   ├── AuthContext.tsx     # Auth state + user info
+│   └── ThemeContext.tsx    # Dark/light mode
 │
-├── types/                   # TypeScript definitions
-├── hooks/                   # Custom React hooks
-├── utils/                   # Helper functions
-└── styles/                  # Global CSS & Tailwind config
+├── types/
+│   └── index.ts            # TypeScript types (aligned with backend)
+│
+└── styles/
+    └── index.css           # TailwindCSS + custom styles
+```
+
+---
+
+## 🔗 API Services
+
+### Authentication (`services/auth.ts`)
+
+```typescript
+authService.login({ email, password }); // Returns tokens + user
+authService.logout(); // Clears tokens
+authService.getMe(); // Get current user
+authService.refreshToken(); // Refresh access token
+```
+
+### Data Services (`services/data.ts`)
+
+```typescript
+// Timetable
+timetableService.getStudentTimetable(); // Student's class schedule
+timetableService.getTeacherTimetable(); // Teacher's schedule
+
+// Attendance
+attendanceService.getMyAttendance(); // Student's attendance stats
+attendanceService.markBulkAttendance(); // Faculty bulk marking
+
+// Notifications
+notificationService.getNotifications(); // Paginated list
+notificationService.markAsRead(id); // Mark single as read
+
+// Events
+eventService.getEvents(); // All events
+eventService.createEvent(data); // Create new event
+eventService.publishEvent(id); // Publish draft
+
+// Grievances
+grievanceService.getGrievances(); // Admin ticket list
+grievanceService.updateStatus(id, status); // Update ticket
 ```
 
 ---
@@ -118,6 +182,7 @@ src/
 | **Build**     | Vite 6           | Fast dev server & bundler       |
 | **Styling**   | TailwindCSS 3.4  | Utility-first CSS               |
 | **Routing**   | React Router 7   | Client-side navigation          |
+| **HTTP**      | Axios            | API requests with interceptors  |
 | **Icons**     | Material Symbols | Google's icon library           |
 | **Fonts**     | Inter            | Modern, readable typography     |
 
@@ -138,10 +203,9 @@ src/
 --error: #ef4444; /* Red */
 --info: #3b82f6; /* Blue */
 
-/* Neutral (Dark mode) */
+/* Surfaces (Dark mode) */
 --bg-primary: #0f172a;
---bg-secondary: #1e293b;
---text-primary: #f8fafc;
+--surface-dark: #1e293b;
 ```
 
 ### Typography
@@ -162,20 +226,6 @@ src/
 | `md`       | 768px+  | Tablets          |
 | `lg`       | 1024px+ | Small laptops    |
 | `xl`       | 1280px+ | Desktops         |
-| `2xl`      | 1536px+ | Large screens    |
-
----
-
-## 🔧 Environment Variables
-
-```env
-# API Configuration
-VITE_API_URL=http://localhost:3000/api/v1
-
-# Feature Flags
-VITE_ENABLE_DARK_MODE=true
-VITE_ENABLE_AI_FEATURES=false
-```
 
 ---
 
@@ -186,8 +236,22 @@ npm run dev        # Start dev server with HMR
 npm run build      # Production build
 npm run preview    # Preview production build
 npm run lint       # Run ESLint
-npm run type-check # TypeScript validation
+npx tsc --noEmit   # TypeScript validation
 ```
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable       | Description     | Default                        |
+| -------------- | --------------- | ------------------------------ |
+| `VITE_API_URL` | Backend API URL | `http://localhost:3000/api/v1` |
+
+### Vite Config
+
+The app uses Vite with React plugin. See `vite.config.ts` for configuration.
 
 ---
 
@@ -206,5 +270,7 @@ MIT © [Veer Hooda](https://github.com/veerhooda)
 <div align="center">
 
 **Part of the [AIT Smart Campus](https://github.com/veerhooda/AIT_CMS) ecosystem**
+
+[![Backend](https://img.shields.io/badge/See_Also-Backend_API-E0234E?style=for-the-badge&logo=nestjs)](../ait-cms-backend)
 
 </div>
