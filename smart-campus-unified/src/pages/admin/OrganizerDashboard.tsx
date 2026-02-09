@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/shared/StatCard';
 import { eventService } from '../../services';
 import { CampusEvent } from '../../types';
@@ -41,6 +42,7 @@ const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
 );
 
 const OrganizerDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<CampusEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiSuggestions, setAiSuggestions] = useState<{title: string; description: string}[]>([]);
@@ -105,7 +107,10 @@ const OrganizerDashboard: React.FC = () => {
             </span>
             {isLoadingAi ? 'Thinking...' : 'AI Suggestions'}
           </button>
-          <button className="bg-primary hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-all px-5 py-2.5 rounded-lg flex items-center gap-2 font-semibold text-sm">
+          <button 
+            onClick={() => navigate('/organizer/events')}
+            className="bg-primary hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-all px-5 py-2.5 rounded-lg flex items-center gap-2 font-semibold text-sm"
+          >
             <span className="material-symbols-outlined text-[20px]">add</span>
             Create New Event
           </button>

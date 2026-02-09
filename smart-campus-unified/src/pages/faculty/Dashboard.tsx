@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/shared/StatCard';
 import { useAuth, getDisplayName } from '../../context/AuthContext';
 import { timetableService } from '../../services';
@@ -24,6 +25,7 @@ const getTodayDay = (): string => {
 };
 
 const FacultyDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const userName = user ? getDisplayName(user) : 'Professor';
   
@@ -79,11 +81,17 @@ const FacultyDashboard: React.FC = () => {
           <p className="text-slate-500 dark:text-slate-400 mt-1">Here's your teaching schedule and pending tasks.</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          <button 
+            onClick={() => navigate('/faculty/schedule')}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
             <span className="material-symbols-outlined text-[18px]">calendar_month</span>
             View Full Schedule
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors">
+          <button 
+            onClick={() => alert('Assignment creation coming soon!')}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors"
+          >
             <span className="material-symbols-outlined text-[18px]">add</span>
             New Assignment
           </button>
@@ -195,6 +203,7 @@ const FacultyDashboard: React.FC = () => {
               {immediateActions.map((action) => (
                 <button 
                   key={action.label}
+                  onClick={() => action.path ? navigate(action.path) : alert(`${action.label} feature coming soon!`)}
                   className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl ${action.color} hover:scale-[1.02] transition-transform cursor-pointer`}
                 >
                   <span className="material-symbols-outlined">{action.icon}</span>

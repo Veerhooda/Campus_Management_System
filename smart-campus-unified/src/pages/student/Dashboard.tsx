@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/shared/StatCard';
 import { useAuth } from '../../context/AuthContext';
 import { timetableService, attendanceService, notificationService } from '../../services';
@@ -17,6 +18,7 @@ const getGreeting = (): string => {
 };
 
 const StudentDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const firstName = user?.firstName || 'Student';
   
@@ -210,7 +212,7 @@ const StudentDashboard: React.FC = () => {
                     })}
                   </div>
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 text-center">
-                    <button className="text-sm font-semibold text-primary hover:text-blue-700 transition-colors">View All Notifications</button>
+                    <button onClick={() => navigate('/student/notifications')} className="text-sm font-semibold text-primary hover:text-blue-700 transition-colors">View All Notifications</button>
                   </div>
                 </>
               )}
@@ -232,6 +234,7 @@ const StudentDashboard: React.FC = () => {
               ].map((action) => (
                 <button 
                   key={action.label}
+                  onClick={() => alert(`${action.label} feature coming soon!`)}
                   className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary transition-all group border border-transparent hover:border-slate-200 dark:hover:border-slate-600"
                 >
                   <span className="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">{action.icon}</span>

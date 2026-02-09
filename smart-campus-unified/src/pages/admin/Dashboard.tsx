@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/shared/StatCard';
 import { grievanceService, eventService } from '../../services';
 
@@ -9,7 +10,18 @@ const recentLogs = [
   { id: '4', action: 'Permission Updated', user: 'Prof. Anderson', type: 'Faculty', time: '2 hrs ago', icon: 'admin_panel_settings' },
 ];
 
+// Quick action navigation mapping
+const quickActionRoutes: Record<string, string> = {
+  'Add User': '/admin/dashboard', // Would be /admin/users when implemented
+  'Create Event': '/admin/events',
+  'Broadcast': '/admin/notifications',
+  'Grievances': '/admin/grievances',
+  'Analytics': '/admin/dashboard', // Would be /admin/analytics when implemented
+  'Settings': '/admin/dashboard', // Would be /admin/settings when implemented
+};
+
 const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalUsers: '...',
     activeFaculty: '...',
@@ -58,11 +70,17 @@ const AdminDashboard: React.FC = () => {
           <p className="text-slate-500 dark:text-slate-400 mt-1">System overview and management controls.</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          <button 
+            onClick={() => alert('Export functionality coming soon!')}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
             <span className="material-symbols-outlined text-[18px]">download</span>
             Export Report
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors">
+          <button 
+            onClick={() => alert('Settings page coming soon!')}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors"
+          >
             <span className="material-symbols-outlined text-[18px]">settings</span>
             System Settings
           </button>
@@ -99,6 +117,7 @@ const AdminDashboard: React.FC = () => {
             ].map((action) => (
               <button 
                 key={action.label}
+                onClick={() => navigate(quickActionRoutes[action.label] || '/admin/dashboard')}
                 className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl ${action.color} hover:scale-[1.02] transition-transform cursor-pointer`}
               >
                 <span className="material-symbols-outlined">{action.icon}</span>
@@ -142,7 +161,7 @@ const AdminDashboard: React.FC = () => {
         <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
           <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Activity</h3>
-            <button className="text-xs font-semibold text-primary hover:underline">View All</button>
+            <button onClick={() => navigate('/admin/notifications')} className="text-xs font-semibold text-primary hover:underline">View All</button>
           </div>
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {recentLogs.map((log) => (
