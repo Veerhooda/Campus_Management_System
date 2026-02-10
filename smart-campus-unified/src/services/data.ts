@@ -1,5 +1,6 @@
 import api, { ApiResponse } from './api';
-import { TimetableSlot, AttendanceRecord, Notification, Student, Grievance, CampusEvent, PaginatedResponse, MaintenanceTicket, User } from '../types';
+import { TimetableSlot, AttendanceRecord, Notification, Student, Grievance, CampusEvent, PaginatedResponse, MaintenanceTicket, User, Room, Department } from '../types';
+import type { Class as ClassInfo, Subject as SubjectInfo, Teacher as TeacherInfo } from '../types';
 
 // Teacher profile type
 interface TeacherProfile {
@@ -54,6 +55,42 @@ export const timetableService = {
 
   getAllSlots: async (page = 1, limit = 20): Promise<PaginatedResponse<TimetableSlot>> => {
     const response = await api.get<ApiResponse<PaginatedResponse<TimetableSlot>>>('/timetable', { params: { page, limit } });
+    return response.data.data;
+  },
+
+  // Admin CRUD
+  createSlot: async (data: { dayOfWeek: string; startTime: string; endTime: string; classId: string; subjectId: string; teacherId: string; roomId: string }): Promise<TimetableSlot> => {
+    const response = await api.post<ApiResponse<TimetableSlot>>('/timetable', data);
+    return response.data.data;
+  },
+
+  updateSlot: async (id: string, data: Partial<{ dayOfWeek: string; startTime: string; endTime: string; subjectId: string; teacherId: string; roomId: string }>): Promise<TimetableSlot> => {
+    const response = await api.patch<ApiResponse<TimetableSlot>>(`/timetable/slot/${id}`, data);
+    return response.data.data;
+  },
+
+  deleteSlot: async (id: string): Promise<void> => {
+    await api.delete(`/timetable/slot/${id}`);
+  },
+
+  // Admin lookups
+  getClasses: async (): Promise<(ClassInfo & { department?: Department })[]> => {
+    const response = await api.get<ApiResponse<(ClassInfo & { department?: Department })[]>>('/timetable/lookup/classes');
+    return response.data.data;
+  },
+
+  getSubjects: async (): Promise<(SubjectInfo & { department?: Department })[]> => {
+    const response = await api.get<ApiResponse<(SubjectInfo & { department?: Department })[]>>('/timetable/lookup/subjects');
+    return response.data.data;
+  },
+
+  getRooms: async (): Promise<Room[]> => {
+    const response = await api.get<ApiResponse<Room[]>>('/timetable/lookup/rooms');
+    return response.data.data;
+  },
+
+  getTeachers: async (): Promise<{ data: TeacherInfo[] }> => {
+    const response = await api.get<ApiResponse<{ data: TeacherInfo[] }>>('/teachers', { params: { limit: 100 } });
     return response.data.data;
   },
 };

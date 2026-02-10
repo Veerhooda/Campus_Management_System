@@ -1,6 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+
+const CAMPUS_IMAGES = [
+  { src: '/assets/ait-campus-aerial.jpg', caption: 'AIT Campus — Dighi Hills, Pune' },
+  { src: '/assets/ait-main-gate.jpg', caption: 'Army Institute of Technology — Main Gate' },
+  { src: '/assets/ait-campus-2.jpg', caption: 'IEI Industry Excellence Award 2025' },
+];
+
+// CSS filter to subtly enhance low-res images
+const imageEnhanceStyle: React.CSSProperties = {
+  filter: 'contrast(1.05) saturate(1.08) brightness(1.02)',
+  imageRendering: 'auto' as const,
+};
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -8,9 +20,18 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [currentSlide, setCurrentSlide] = useState(0);
   
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Auto-advance slideshow
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % CAMPUS_IMAGES.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +40,6 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(email, password);
-      // Navigation is handled by App.tsx based on role
       navigate('/');
     } catch (err) {
       if (err instanceof Error) {
@@ -32,7 +52,6 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  // Quick login helper for demo
   const handleQuickLogin = (demoEmail: string) => {
     setEmail(demoEmail);
     setPassword('password123');
@@ -40,47 +59,82 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row overflow-hidden bg-background-light dark:bg-background-dark font-display">
-      {/* Left Branding Panel */}
-      <div className="relative hidden md:flex md:w-1/2 lg:w-7/12 xl:w-3/5 bg-primary/10 flex-col justify-between overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 w-full h-full z-0">
-          <img 
-            alt="Modern university campus building" 
-            className="w-full h-full object-cover" 
-            src="https://images.unsplash.com/photo-1562774053-701939374585?w=1200&auto=format&fit=crop&q=80" 
-          />
-          {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/60 to-primary/30 mix-blend-multiply" />
-          <div className="absolute inset-0 bg-black/20" />
-        </div>
+      {/* Left Panel — Campus Image Slideshow */}
+      <div className="relative hidden md:flex md:w-1/2 lg:w-7/12 xl:w-3/5 flex-col justify-between overflow-hidden">
+        {/* Slideshow Images */}
+        {CAMPUS_IMAGES.map((img, idx) => (
+          <div
+            key={idx}
+            className="absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out"
+            style={{ opacity: currentSlide === idx ? 1 : 0, zIndex: currentSlide === idx ? 1 : 0 }}
+          >
+            <img
+              alt={img.caption}
+              className="w-full h-full object-cover"
+              src={img.src}
+              style={imageEnhanceStyle}
+            />
+          </div>
+        ))}
 
-        {/* Content on top of image */}
-        <div className="relative z-10 p-12 flex flex-col h-full justify-between">
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 z-[2] bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-slate-900/20" />
+        <div className="absolute inset-0 z-[2] bg-gradient-to-r from-slate-900/30 to-transparent" />
+
+        {/* Content on top of slideshow */}
+        <div className="relative z-10 p-10 lg:p-12 flex flex-col h-full justify-between">
+          {/* Top — Logo & Title */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center border border-white/30">
-              <span className="material-symbols-outlined text-white" style={{ fontSize: '24px' }}>school</span>
+            <img src="/assets/ait-logo.png" alt="AIT Logo" className="w-12 h-12 rounded-lg bg-white p-1 shadow-lg backdrop-blur-sm" />
+            <div>
+              <span className="text-white text-lg font-bold tracking-wide block leading-tight">Army Institute of Technology</span>
+              <span className="text-white/60 text-xs font-medium tracking-widest uppercase">Pune • Est. 1994</span>
             </div>
-            <span className="text-white text-lg font-bold tracking-wide uppercase opacity-90">AIT Portal</span>
           </div>
 
-          <div className="max-w-[540px] mb-12">
-            <h1 className="text-white text-5xl font-bold leading-tight mb-4 tracking-tight">AIT Smart Campus</h1>
-            <p className="text-white/90 text-xl font-medium leading-relaxed">
+          {/* Bottom — Headline + Slide Controls */}
+          <div className="max-w-[560px]">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-5">
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-white/90 text-xs font-medium">Smart Campus Portal • Live</span>
+            </div>
+            <h1 className="text-white text-4xl lg:text-5xl font-black leading-[1.1] mb-4 tracking-tight">
+              AIT Smart<br />
+              Campus Portal
+            </h1>
+            <p className="text-white/80 text-base lg:text-lg font-medium leading-relaxed max-w-md">
               Empowering the future of education with seamless digital integration for students, faculty, and administration.
             </p>
-            <div className="mt-8 flex gap-2">
-              <div className="h-1.5 w-12 bg-white rounded-full" />
-              <div className="h-1.5 w-3 bg-white/40 rounded-full" />
-              <div className="h-1.5 w-3 bg-white/40 rounded-full" />
+
+            {/* Slide caption */}
+            <p className="text-white/50 text-sm font-medium mt-6 mb-4 transition-opacity duration-500">
+              {CAMPUS_IMAGES[currentSlide].caption}
+            </p>
+
+            {/* Slide indicators */}
+            <div className="flex gap-2 items-center">
+              {CAMPUS_IMAGES.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`transition-all duration-500 rounded-full ${
+                    currentSlide === idx
+                      ? 'h-2 w-8 bg-white'
+                      : 'h-2 w-2 bg-white/40 hover:bg-white/60'
+                  }`}
+                />
+              ))}
+              <span className="ml-3 text-white/40 text-xs font-medium">{currentSlide + 1}/{CAMPUS_IMAGES.length}</span>
             </div>
           </div>
 
-          <div className="text-white/60 text-sm font-medium flex justify-between items-end">
-            <p>© 2026 AIT Education Group. All rights reserved.</p>
+          {/* Footer */}
+          <div className="text-white/40 text-xs font-medium flex justify-between items-end">
+            <p>© 2026 AIT Pune. All rights reserved.</p>
             <div className="flex gap-4">
-              <a className="hover:text-white transition-colors" href="#">Privacy</a>
-              <a className="hover:text-white transition-colors" href="#">Terms</a>
-              <a className="hover:text-white transition-colors" href="#">Contact</a>
+              <a className="hover:text-white/70 transition-colors" href="#">Privacy</a>
+              <a className="hover:text-white/70 transition-colors" href="#">Terms</a>
+              <a className="hover:text-white/70 transition-colors" href="#">Contact</a>
             </div>
           </div>
         </div>
@@ -90,18 +144,20 @@ const LoginPage: React.FC = () => {
       <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 lg:p-24 bg-white dark:bg-background-dark relative w-full md:w-1/2 lg:w-5/12 xl:w-2/5 animate-fade-in">
         {/* Mobile Header */}
         <div className="absolute top-6 left-6 md:hidden flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary" style={{ fontSize: '28px' }}>school</span>
+          <img src="/assets/ait-logo.png" alt="AIT Logo" className="w-8 h-8 rounded-lg bg-white dark:bg-white p-0.5" />
           <span className="text-primary font-bold text-lg">AIT Smart Campus</span>
         </div>
 
         <div className="w-full max-w-[420px] flex flex-col gap-8">
-          {/* Heading */}
+          {/* Heading with logo */}
           <div className="flex flex-col gap-2">
-            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-2">
-              <span className="material-symbols-outlined">lock_person</span>
+            <div className="flex items-center gap-3 mb-3">
+              <img src="/assets/ait-logo.png" alt="AIT Logo" className="w-11 h-11 rounded-xl shadow-sm hidden md:block bg-white dark:bg-slate-100 p-0.5" />
+              <div>
+                <h2 className="text-slate-900 dark:text-white text-2xl font-bold leading-tight tracking-tight">Welcome Back</h2>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Sign in to AIT Smart Campus Portal</p>
+              </div>
             </div>
-            <h2 className="text-slate-900 dark:text-white text-3xl font-bold leading-tight tracking-tight">Welcome Back</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-base font-normal">Enter your credentials to access the portal.</p>
           </div>
 
           {/* Error message */}
@@ -199,10 +255,13 @@ const LoginPage: React.FC = () => {
           </div>
 
           {/* Footer Links */}
-          <div className="mt-auto pt-6 flex justify-center gap-6">
-            <a className="text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">Help Center</a>
-            <span className="text-slate-300 dark:text-slate-700">|</span>
-            <a className="text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">System Status</a>
+          <div className="mt-auto pt-6 flex flex-col items-center gap-2">
+            <p className="text-xs text-slate-400 italic">"Onward to Glory"</p>
+            <div className="flex gap-6">
+              <a className="text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">Help Center</a>
+              <span className="text-slate-300 dark:text-slate-700">|</span>
+              <a className="text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">System Status</a>
+            </div>
           </div>
         </div>
       </div>

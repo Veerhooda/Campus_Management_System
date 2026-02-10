@@ -21,6 +21,7 @@ import GrievanceManagement from './pages/admin/Grievances';
 import OrganizerDashboard from './pages/admin/OrganizerDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import Broadcast from './pages/admin/Broadcast';
+import TimetableManagement from './pages/admin/TimetableManagement';
 
 // Student Feature Pages
 import StudentGrievances from './pages/student/Grievances';
@@ -206,6 +207,11 @@ const App: React.FC = () => {
         <Route path="/admin/broadcast" element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <Broadcast />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/timetable" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <TimetableManagement />
           </ProtectedRoute>
         } />
 

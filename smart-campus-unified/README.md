@@ -9,9 +9,7 @@
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
-<p align="center">
-  <strong>A unified React frontend fully integrated with the NestJS backend API for seamless campus management.</strong>
-</p>
+<strong>A unified React frontend fully integrated with the NestJS backend API for seamless campus management. Customized for Army Institute of Technology, Pune.</strong>
 
 </div>
 
@@ -100,7 +98,9 @@ src/
 │   │   ├── Dashboard.tsx    # System overview
 │   │   ├── Grievances.tsx   # Ticket management
 │   │   ├── UserManagement.tsx # User CRUD & roles
+│   │   ├── UserManagement.tsx # User CRUD & roles
 │   │   ├── Broadcast.tsx    # Role-targeted announcements
+│   │   ├── TimetableManagement.tsx # Slot management (Add/Edit/Delete)
 │   │   └── OrganizerDashboard.tsx
 │   │
 │   ├── faculty/             # Faculty-only pages
@@ -158,6 +158,8 @@ authService.refreshToken(); // Refresh access token
 // Timetable
 timetableService.getStudentTimetable(); // Student's class schedule
 timetableService.getTeacherTimetable(); // Teacher's schedule
+timetableService.createSlot(data); // Admin create slot
+timetableService.deleteSlot(id); // Admin delete slot
 
 // Attendance
 attendanceService.getMyAttendance(); // Student's attendance stats

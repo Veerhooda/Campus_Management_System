@@ -18,6 +18,36 @@ export class TimetableController {
   constructor(private readonly timetableService: TimetableService) {}
 
   /**
+   * GET /api/v1/timetable/lookup/classes
+   * Get all classes for dropdowns (Admin)
+   */
+  @Get('lookup/classes')
+  @Roles(Role.ADMIN)
+  async getClasses() {
+    return this.timetableService.getAllClasses();
+  }
+
+  /**
+   * GET /api/v1/timetable/lookup/subjects
+   * Get all subjects for dropdowns (Admin)
+   */
+  @Get('lookup/subjects')
+  @Roles(Role.ADMIN)
+  async getSubjects() {
+    return this.timetableService.getAllSubjects();
+  }
+
+  /**
+   * GET /api/v1/timetable/lookup/rooms
+   * Get all rooms for dropdowns (Admin)
+   */
+  @Get('lookup/rooms')
+  @Roles(Role.ADMIN)
+  async getRooms() {
+    return this.timetableService.getAllRooms();
+  }
+
+  /**
    * POST /api/v1/timetable
    * Create new slot (Admin only)
    */

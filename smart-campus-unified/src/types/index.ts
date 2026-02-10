@@ -250,3 +250,12 @@ export interface Department {
   name: string;
   code: string;
 }
+
+// Room
+export interface Room {
+  id: string;
+  name: string;
+  building: string;
+  capacity: number;
+  hasProjector: boolean;
+}

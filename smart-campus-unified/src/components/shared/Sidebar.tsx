@@ -37,6 +37,7 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
     { icon: 'grid_view', label: 'Dashboard', path: '/admin/dashboard' },
     { icon: 'people', label: 'User Management', path: '/admin/users' },
     { icon: 'campaign', label: 'Broadcast', path: '/admin/broadcast' },
+    { icon: 'calendar_month', label: 'Timetable', path: '/admin/timetable' },
     { icon: 'event', label: 'Events', path: '/admin/events' },
     { icon: 'support_agent', label: 'Grievances', path: '/admin/grievances' },
     { icon: 'celebration', label: 'Organizer Portal', path: '/admin/organizer' },
@@ -106,9 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
       `}>
         {/* Logo Section */}
         <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/30">
-            <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>school</span>
-          </div>
+          <img src="/assets/ait-logo.png" alt="AIT Logo" className="w-10 h-10 rounded-xl shadow-lg bg-white dark:bg-slate-100 p-0.5" />
           <div>
             <span className="font-bold text-lg text-slate-800 dark:text-white tracking-tight block">AIT Portal</span>
             <span className="text-xs text-slate-500 dark:text-slate-400">{roleDisplay} View</span>

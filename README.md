@@ -1,8 +1,12 @@
 <div align="center">
 
+<img src="smart-campus-unified/public/assets/ait-logo.png" alt="AIT Logo" width="80" />
+
 # 🎓 AIT Smart Campus Management System
 
-### The Complete Digital Infrastructure for Modern Educational Institutions
+### Army Institute of Technology, Pune — "Onward to Glory"
+
+#### The Complete Digital Infrastructure for Modern Educational Institutions
 
 [![Frontend](https://img.shields.io/badge/Frontend-React_19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](./smart-campus-unified)
 [![Backend](https://img.shields.io/badge/Backend-NestJS_10-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](./ait-cms-backend)
@@ -10,7 +14,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 <p align="center">
-  <strong>A full-stack campus management platform featuring a React frontend and NestJS backend, designed to streamline academic operations, enhance student engagement, and empower administrators.</strong>
+  <strong>A full-stack campus management platform built for AIT Pune, featuring a React frontend and NestJS backend to streamline academic operations, enhance student engagement, and empower administrators.</strong>
 </p>
 
 [Live Demo](#-demo) •
@@ -31,7 +35,7 @@
 
 ## 🌟 Overview
 
-**AIT Smart Campus** is a comprehensive, production-grade campus management system consisting of:
+**AIT Smart Campus** is a comprehensive, production-grade campus management system built for **Army Institute of Technology, Pune** (Est. 1994). The system consists of:
 
 | Component       | Technology         | Description                                              |
 | --------------- | ------------------ | -------------------------------------------------------- |
@@ -77,7 +81,7 @@
 
 ### 📚 Academic Management
 
-- **Smart Timetable** — Conflict detection for classes, teachers, rooms
+- **Smart Timetable** — Admin UI for creating/editing/deleting slots with conflict detection for classes, teachers, and rooms
 - **Attendance Tracking** — Bulk marking with per-student analytics
 - **Notes & Materials** — Faculty upload with drag-and-drop, student browse & download
 
@@ -100,10 +104,11 @@
 ```
 AIT_CMS/
 ├── smart-campus-unified/          # 🖥️ FRONTEND
+│   ├── public/assets/             # AIT branding (logo, campus images)
 │   ├── src/
 │   │   ├── components/            # Reusable UI components
 │   │   ├── pages/                 # Role-based page modules
-│   │   │   ├── admin/             # Admin dashboard
+│   │   │   ├── admin/             # Admin dashboard, timetable mgmt
 │   │   │   ├── faculty/           # Faculty portal
 │   │   │   ├── student/           # Student portal
 │   │   │   └── shared/            # Cross-role pages
@@ -240,7 +245,8 @@ npm run dev
 
 - [x] Core authentication & RBAC
 - [x] User management (Admin, Teacher, Student, Organizer)
-- [x] Timetable with conflict detection
+- [x] Timetable API with conflict detection
+- [x] **Admin Timetable Management UI** — Weekly grid, add/edit/delete slots
 - [x] Attendance tracking & analytics
 - [x] Event management with registration
 - [x] Grievance & maintenance ticketing
@@ -248,6 +254,7 @@ npm run dev
 - [x] Notes upload (faculty) & download (student)
 - [x] Notification system
 - [x] Broadcast announcements
+- [x] **AIT Pune branding** — Campus slideshow, logo integration, dark mode support
 - [ ] Real-time WebSocket updates
 - [ ] Mobile app (React Native)
 - [ ] AI-powered course recommendations

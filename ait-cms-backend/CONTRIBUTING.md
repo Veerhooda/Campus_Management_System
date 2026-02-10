@@ -37,10 +37,13 @@ This project adheres to a Code of Conduct that all contributors are expected to 
    npm run db:seed
    ```
 5. **Set up the frontend**:
+
    ```bash
    cd ../smart-campus-unified
    npm install
    ```
+
+   **Note:** Branding assets (AIT logo, campus images) are located in `smart-campus-unified/public/assets/`. Please do not modify or remove these files without authorization.
 
 ## Development Workflow
 
@@ -126,6 +129,17 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 - Service functions go in `services/data.ts`, not in components
 - Use the shared design tokens from `index.css`
 - Validate builds with `npx tsc --noEmit` before committing
+
+## 🎨 AIT Branding Guidelines
+
+When contributing to the frontend, please ensure you adhere to the AIT Pune brand identity:
+
+- **Logo Usage:** Always use the official AIT logo (`/assets/ait-logo.png`) in headers/footers.
+- **Color Palette:**
+  - Primary Blue: `#0F172A` (Slate 900) or similar deep blues
+  - Accent: `#6366F1` (Indigo 500)
+- **Typography:** Use **Inter** font family for clean, modern readability.
+- **Tone:** Professional, academic, and respectful. Use "Student", "Faculty", "Admin" as standard roles.
 
 ## Commit Messages
 

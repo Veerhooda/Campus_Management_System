@@ -239,6 +239,35 @@ export class TimetableService {
   }
 
   /**
+   * Get all classes (for admin lookups)
+   */
+  async getAllClasses() {
+    return this.prisma.class.findMany({
+      include: { department: true },
+      orderBy: [{ department: { name: 'asc' } }, { year: 'asc' }, { section: 'asc' }],
+    });
+  }
+
+  /**
+   * Get all subjects (for admin lookups)
+   */
+  async getAllSubjects() {
+    return this.prisma.subject.findMany({
+      include: { department: true },
+      orderBy: [{ department: { name: 'asc' } }, { name: 'asc' }],
+    });
+  }
+
+  /**
+   * Get all rooms (for admin lookups)
+   */
+  async getAllRooms() {
+    return this.prisma.room.findMany({
+      orderBy: [{ building: 'asc' }, { name: 'asc' }],
+    });
+  }
+
+  /**
    * Group slots by day of week
    */
   private groupByDay(slots: any[]) {

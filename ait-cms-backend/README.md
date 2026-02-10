@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🎓 AIT Smart Campus Management System
+# 🎓 AIT Smart Campus — Backend API
 
-### A Modern, Scalable Backend for Next-Generation Educational Institutions
+### Army Institute of Technology, Pune — Backend Services
 
 [![NestJS](https://img.shields.io/badge/NestJS-10.x-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -250,11 +250,18 @@ curl -H "Authorization: Bearer <accessToken>" \
 <details>
 <summary><strong>📅 Timetable</strong></summary>
 
-| Method | Endpoint                 | Access         | Description      |
-| ------ | ------------------------ | -------------- | ---------------- |
-| `POST` | `/timetable`             | Admin          | Create slot      |
-| `GET`  | `/timetable/class/:id`   | Auth           | Class timetable  |
-| `GET`  | `/timetable/teacher/:id` | Admin, Teacher | Teacher schedule |
+| Method   | Endpoint                     | Access         | Description       |
+| -------- | ---------------------------- | -------------- | ----------------- |
+| `POST`   | `/timetable`                 | Admin          | Create slot       |
+| `GET`    | `/timetable/class/:id`       | Auth           | Class timetable   |
+| `GET`    | `/timetable/teacher/:id`     | Admin, Teacher | Teacher schedule  |
+| `GET`    | `/timetable/room/:id`        | Auth           | Room schedule     |
+| `GET`    | `/timetable/slot/:id`        | Auth           | Get single slot   |
+| `PATCH`  | `/timetable/slot/:id`        | Admin          | Update slot       |
+| `DELETE` | `/timetable/slot/:id`        | Admin          | Delete slot       |
+| `GET`    | `/timetable/lookup/classes`  | Admin          | All classes list  |
+| `GET`    | `/timetable/lookup/subjects` | Admin          | All subjects list |
+| `GET`    | `/timetable/lookup/rooms`    | Admin          | All rooms list    |
 
 </details>
 
