@@ -287,6 +287,6 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 **Made with ❤️ by [Veer Hooda](https://github.com/veerhooda)**
 
 [![GitHub](https://img.shields.io/badge/GitHub-veerhooda-181717?style=for-the-badge&logo=github)](https://github.com/veerhooda)
-[![Stars](https://img.shields.io/github/stars/veerhooda/AIT_CMS?style=for-the-badge)](https://github.com/veerhooda/AIT_CMS/stargazers)
+[![Stars](https://img.shields.io/github/stars/veerhooda/AIT_CMS?style=for-the-badge)](https://github.com/veerhooda/Campus_Management_System/stargazers)
 
 </div>
