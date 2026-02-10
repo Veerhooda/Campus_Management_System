@@ -18,25 +18,25 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
 
   const studentItems: NavItem[] = [
     { icon: 'grid_view', label: 'Dashboard', path: '/student/dashboard' },
-    { icon: 'book', label: 'My Courses', path: '/student/courses' },
     { icon: 'calendar_month', label: 'Schedule', path: '/student/schedule' },
-    { icon: 'assignment', label: 'Assignments', path: '/student/assignments' },
-    { icon: 'pie_chart', label: 'Attendance', path: '/student/attendance' },
+    { icon: 'library_books', label: 'Notes', path: '/student/notes' },
+    { icon: 'support_agent', label: 'Grievances', path: '/student/grievances' },
+    { icon: 'build', label: 'Maintenance', path: '/student/maintenance' },
     ...commonItems,
   ];
 
   const facultyItems: NavItem[] = [
     { icon: 'grid_view', label: 'Dashboard', path: '/faculty/dashboard' },
-    { icon: 'groups', label: 'My Classes', path: '/faculty/classes' },
     { icon: 'calendar_month', label: 'Schedule', path: '/faculty/schedule' },
     { icon: 'check_circle', label: 'Mark Attendance', path: '/faculty/attendance' },
-    { icon: 'grading', label: 'Grading', path: '/faculty/grading' },
+    { icon: 'upload_file', label: 'Upload Notes', path: '/faculty/notes' },
     ...commonItems,
   ];
 
   const adminItems: NavItem[] = [
     { icon: 'grid_view', label: 'Dashboard', path: '/admin/dashboard' },
     { icon: 'people', label: 'User Management', path: '/admin/users' },
+    { icon: 'campaign', label: 'Broadcast', path: '/admin/broadcast' },
     { icon: 'event', label: 'Events', path: '/admin/events' },
     { icon: 'support_agent', label: 'Grievances', path: '/admin/grievances' },
     { icon: 'celebration', label: 'Organizer Portal', path: '/admin/organizer' },
@@ -46,7 +46,6 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
   const organizerItems: NavItem[] = [
     { icon: 'grid_view', label: 'Dashboard', path: '/organizer/dashboard' },
     { icon: 'event', label: 'Events', path: '/organizer/events' },
-    { icon: 'group', label: 'Registrations', path: '/organizer/registrations' },
     ...commonItems,
   ];
 

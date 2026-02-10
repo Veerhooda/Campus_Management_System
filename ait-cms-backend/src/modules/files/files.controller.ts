@@ -3,16 +3,20 @@ import {
   Get,
   Post,
   Delete,
-  Body,
   Param,
   Query,
+  Res,
   ParseUUIDPipe,
   ParseIntPipe,
   DefaultValuePipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { Role } from '@prisma/client';
 import { FilesService } from './files.service';
-import { UploadFileDto } from './dto';
 import { Roles, CurrentUser } from '../../common/decorators';
 
 @Controller('files')
@@ -21,24 +25,43 @@ export class FilesController {
 
   /**
    * POST /api/v1/files/upload
-   * Get presigned URL for uploading a file (Teacher only)
+   * Upload a file (Teacher only)
    */
   @Post('upload')
   @Roles(Role.TEACHER)
-  async getUploadUrl(
-    @Body() dto: UploadFileDto,
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max
+    }),
+  )
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
     @CurrentUser('id') userId: string,
+    @Query('subjectId') subjectId?: string,
   ) {
-    return this.filesService.getUploadUrl(dto, userId);
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+    return this.filesService.uploadFile(file, userId, subjectId);
   }
 
   /**
    * GET /api/v1/files/:id/download
-   * Get presigned URL for downloading a file
+   * Download a file
    */
   @Get(':id/download')
-  async getDownloadUrl(@Param('id', ParseUUIDPipe) id: string) {
-    return this.filesService.getDownloadUrl(id);
+  async downloadFile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res() res: Response,
+  ) {
+    const { filePath, filename, mimeType } =
+      await this.filesService.getFilePath(id);
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${encodeURIComponent(filename)}"`,
+    );
+    res.sendFile(filePath);
   }
 
   /**
@@ -66,6 +89,18 @@ export class FilesController {
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
   ) {
     return this.filesService.getFilesBySubject(subjectId, page, limit);
+  }
+
+  /**
+   * GET /api/v1/files/all
+   * Get all files (for students to browse)
+   */
+  @Get('all')
+  async getAllFiles(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    return this.filesService.getAllFiles(page, limit);
   }
 
   /**

@@ -82,7 +82,8 @@
 
 - **Grievance Ticketing** — Submit → Assign → Resolve workflow
 - **Maintenance Requests** — Priority-based facility management
-- **File Storage** — S3-compatible uploads with presigned URLs
+- **File Storage** — Local disk storage with S3-compatible fallback; multipart upload & direct download
+- **Broadcast** — Role-targeted announcements
 
 ---
 
@@ -111,16 +112,16 @@
 
 ### Tech Stack
 
-| Layer         | Technology     | Purpose                      |
-| ------------- | -------------- | ---------------------------- |
-| **Runtime**   | Node.js 20+    | JavaScript runtime           |
-| **Framework** | NestJS 10      | Enterprise Node.js framework |
-| **Language**  | TypeScript 5   | Type-safe development        |
-| **ORM**       | Prisma 7       | Type-safe database access    |
-| **Database**  | PostgreSQL 16  | Primary data store           |
-| **Cache**     | Redis 7        | Session & queue management   |
-| **Storage**   | MinIO / AWS S3 | File uploads                 |
-| **Auth**      | Passport + JWT | Authentication strategy      |
+| Layer         | Technology      | Purpose                       |
+| ------------- | --------------- | ----------------------------- |
+| **Runtime**   | Node.js 20+     | JavaScript runtime            |
+| **Framework** | NestJS 10       | Enterprise Node.js framework  |
+| **Language**  | TypeScript 5    | Type-safe development         |
+| **ORM**       | Prisma 7        | Type-safe database access     |
+| **Database**  | PostgreSQL 16   | Primary data store            |
+| **Cache**     | Redis 7         | Session & queue management    |
+| **Storage**   | Local Disk / S3 | File uploads (local fallback) |
+| **Auth**      | Passport + JWT  | Authentication strategy       |
 
 ---
 
@@ -291,6 +292,20 @@ curl -H "Authorization: Bearer <accessToken>" \
 
 </details>
 
+<details>
+<summary><strong>📁 Files</strong></summary>
+
+| Method   | Endpoint              | Access        | Description             |
+| -------- | --------------------- | ------------- | ----------------------- |
+| `POST`   | `/files/upload`       | Teacher       | Upload file (multipart) |
+| `GET`    | `/files/all`          | Auth          | Browse all files        |
+| `GET`    | `/files/my`           | Teacher       | My uploaded files       |
+| `GET`    | `/files/:id/download` | Auth          | Download a file         |
+| `GET`    | `/files/subject/:id`  | Auth          | Files by subject        |
+| `DELETE` | `/files/:id`          | Teacher/Admin | Delete a file           |
+
+</details>
+
 ---
 
 ## 📁 Project Structure
@@ -367,10 +382,12 @@ npx prisma migrate deploy
 | `JWT_REFRESH_EXPIRATION` | Refresh token TTL            | `7d`                                                    |
 | `REDIS_HOST`             | Redis host                   | `localhost`                                             |
 | `REDIS_PORT`             | Redis port                   | `6379`                                                  |
-| `S3_ENDPOINT`            | S3/MinIO endpoint            | `http://localhost:9000`                                 |
-| `S3_ACCESS_KEY`          | S3 access key                | (optional)                                              |
-| `S3_SECRET_KEY`          | S3 secret key                | (optional)                                              |
+| `S3_ENDPOINT`            | S3/MinIO endpoint (optional) | `http://localhost:9000`                                 |
+| `S3_ACCESS_KEY`          | S3 access key (optional)     | —                                                       |
+| `S3_SECRET_KEY`          | S3 secret key (optional)     | —                                                       |
 | `S3_BUCKET`              | S3 bucket name               | `ait-cms-files`                                         |
+
+> **Note:** When S3 is not configured, the backend automatically falls back to local disk storage in the `uploads/` directory.
 
 ---
 

@@ -51,6 +51,7 @@ const AttendanceMarking: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(0);
   const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState('');
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -70,6 +71,7 @@ const AttendanceMarking: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to load timetable:', err);
+        setError('Could not load your timetable. Please make sure your teacher profile is set up.');
       } finally {
         setLoading(false);
       }
@@ -93,8 +95,8 @@ const AttendanceMarking: React.FC = () => {
         setHasUnsavedChanges(0);
       } catch (err) {
         console.error('Failed to load students:', err);
-        // Fallback to empty if API fails
         setStudents([]);
+        setError('Could not load student list for this class.');
       } finally {
         setLoadingStudents(false);
       }
@@ -175,6 +177,25 @@ const AttendanceMarking: React.FC = () => {
           <Skeleton className="h-24" />
         </div>
         <Skeleton className="h-96" />
+      </div>
+    );
+  }
+
+  if (error && timetable.length === 0) {
+    return (
+      <div className="flex flex-col gap-6 animate-fade-in">
+        <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Attendance Marking</h1>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-8 text-center">
+          <span className="material-symbols-outlined text-5xl text-red-400 mb-4 block">error_outline</span>
+          <h2 className="text-xl font-bold text-red-800 dark:text-red-200 mb-2">Unable to Load Attendance</h2>
+          <p className="text-red-600 dark:text-red-300">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }

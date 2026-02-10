@@ -13,11 +13,19 @@ import StudentDashboard from './pages/student/Dashboard';
 // Faculty Pages
 import FacultyDashboard from './pages/faculty/Dashboard';
 import AttendanceMarking from './pages/faculty/Attendance';
+import NotesUpload from './pages/faculty/NotesUpload';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
 import GrievanceManagement from './pages/admin/Grievances';
 import OrganizerDashboard from './pages/admin/OrganizerDashboard';
+import UserManagement from './pages/admin/UserManagement';
+import Broadcast from './pages/admin/Broadcast';
+
+// Student Feature Pages
+import StudentGrievances from './pages/student/Grievances';
+import MaintenanceRequests from './pages/student/MaintenanceRequests';
+import StudentNotes from './pages/student/Notes';
 
 // Shared Pages
 import Notifications from './pages/shared/Notifications';
@@ -121,6 +129,21 @@ const App: React.FC = () => {
             <Notifications />
           </ProtectedRoute>
         } />
+        <Route path="/student/grievances" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentGrievances />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/maintenance" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <MaintenanceRequests />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/notes" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentNotes />
+          </ProtectedRoute>
+        } />
 
         {/* Faculty/Teacher Routes */}
         <Route path="/faculty/dashboard" element={
@@ -141,6 +164,11 @@ const App: React.FC = () => {
         <Route path="/faculty/notifications" element={
           <ProtectedRoute allowedRoles={['TEACHER']}>
             <Notifications />
+          </ProtectedRoute>
+        } />
+        <Route path="/faculty/notes" element={
+          <ProtectedRoute allowedRoles={['TEACHER']}>
+            <NotesUpload />
           </ProtectedRoute>
         } />
 
@@ -168,6 +196,16 @@ const App: React.FC = () => {
         <Route path="/admin/notifications" element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <Notifications />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/users" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <UserManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/broadcast" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Broadcast />
           </ProtectedRoute>
         } />
 

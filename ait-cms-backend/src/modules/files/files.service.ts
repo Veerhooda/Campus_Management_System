@@ -6,24 +6,15 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import * as fs from 'fs';
+import * as path from 'path';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../../prisma';
-import { UploadFileDto } from './dto';
 
 @Injectable()
 export class FilesService implements OnModuleInit {
   private readonly logger = new Logger(FilesService.name);
-  private s3Client: S3Client | null = null;
-  private bucket: string = '';
-  private readonly urlExpiration: number = 3600;
-  private s3Enabled = false;
+  private uploadDir: string;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -31,88 +22,78 @@ export class FilesService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    // Initialize S3 client only if credentials are provided
-    const accessKeyId = this.configService.get<string>('s3.accessKeyId');
-    const secretAccessKey = this.configService.get<string>('s3.secretAccessKey');
-    const bucket = this.configService.get<string>('s3.bucket');
-
-    if (accessKeyId && secretAccessKey && bucket) {
-      this.s3Client = new S3Client({
-        endpoint: this.configService.get('s3.endpoint'),
-        region: this.configService.get('s3.region') || 'us-east-1',
-        credentials: {
-          accessKeyId,
-          secretAccessKey,
-        },
-        forcePathStyle: true, // Required for MinIO
-      });
-      this.bucket = bucket;
-      this.s3Enabled = true;
-      this.logger.log('S3 storage initialized');
-    } else {
-      this.logger.warn('S3 storage not configured - file uploads will be disabled');
+    // Use local disk storage
+    this.uploadDir = path.resolve(process.cwd(), 'uploads');
+    if (!fs.existsSync(this.uploadDir)) {
+      fs.mkdirSync(this.uploadDir, { recursive: true });
     }
-  }
-
-  private ensureS3Enabled() {
-    if (!this.s3Enabled || !this.s3Client) {
-      throw new BadRequestException('File storage is not configured');
-    }
+    this.logger.log(`Local file storage initialized at: ${this.uploadDir}`);
   }
 
   /**
-   * Generate a presigned URL for uploading a file
+   * Upload a file to local disk
    */
-  async getUploadUrl(dto: UploadFileDto, uploadedById: string) {
-    this.ensureS3Enabled();
-
+  async uploadFile(
+    file: Express.Multer.File,
+    uploadedByUserId: string,
+    subjectId?: string,
+  ) {
     const teacher = await this.prisma.teacher.findUnique({
-      where: { userId: uploadedById },
+      where: { userId: uploadedByUserId },
     });
 
     if (!teacher) {
       throw new BadRequestException('Only teachers can upload files');
     }
 
-    const key = `${uuid()}/${dto.filename}`;
+    // Validate subject if provided
+    if (subjectId) {
+      const subject = await this.prisma.subject.findUnique({
+        where: { id: subjectId },
+      });
+      if (!subject) {
+        throw new BadRequestException('Subject not found');
+      }
+    }
 
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      ContentType: dto.mimeType,
-    });
+    const fileId = uuid();
+    const ext = path.extname(file.originalname);
+    const storedFilename = `${fileId}${ext}`;
+    const filePath = path.join(this.uploadDir, storedFilename);
 
-    const uploadUrl = await getSignedUrl(this.s3Client!, command, {
-      expiresIn: this.urlExpiration,
-    });
+    // Write file to disk
+    fs.writeFileSync(filePath, file.buffer);
 
-    const file = await this.prisma.file.create({
+    const record = await this.prisma.file.create({
       data: {
-        filename: dto.filename,
-        originalName: dto.filename,
-        mimeType: dto.mimeType,
-        sizeBytes: dto.size,
-        storageKey: key,
+        filename: storedFilename,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        sizeBytes: file.size,
+        storageKey: storedFilename,
         uploadedById: teacher.id,
+        subjectId: subjectId || null,
+      },
+      include: {
+        uploadedBy: {
+          include: {
+            user: {
+              select: { id: true, firstName: true, lastName: true },
+            },
+          },
+        },
+        subject: true,
       },
     });
 
-    this.logger.log(`Upload URL generated for file: ${file.id}`);
-
-    return {
-      fileId: file.id,
-      uploadUrl,
-      key,
-      expiresIn: this.urlExpiration,
-    };
+    this.logger.log(`File uploaded: ${record.id} (${file.originalname})`);
+    return record;
   }
 
   /**
-   * Generate a presigned URL for downloading a file
+   * Get file path for download
    */
-  async getDownloadUrl(fileId: string) {
-    this.ensureS3Enabled();
-
+  async getFilePath(fileId: string) {
     const file = await this.prisma.file.findUnique({
       where: { id: fileId },
     });
@@ -121,20 +102,16 @@ export class FilesService implements OnModuleInit {
       throw new NotFoundException('File not found');
     }
 
-    const command = new GetObjectCommand({
-      Bucket: this.bucket,
-      Key: file.storageKey,
-    });
+    const filePath = path.join(this.uploadDir, file.storageKey);
 
-    const downloadUrl = await getSignedUrl(this.s3Client!, command, {
-      expiresIn: this.urlExpiration,
-    });
+    if (!fs.existsSync(filePath)) {
+      throw new NotFoundException('File not found on disk');
+    }
 
     return {
-      fileId: file.id,
+      filePath,
       filename: file.originalName,
-      downloadUrl,
-      expiresIn: this.urlExpiration,
+      mimeType: file.mimeType,
     };
   }
 
@@ -157,6 +134,9 @@ export class FilesService implements OnModuleInit {
         where: { uploadedById: teacher.id },
         skip,
         take: limit,
+        include: {
+          subject: true,
+        },
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.file.count({ where: { uploadedById: teacher.id } }),
@@ -175,7 +155,13 @@ export class FilesService implements OnModuleInit {
     const file = await this.prisma.file.findUnique({
       where: { id: fileId },
       include: {
-        uploadedBy: { include: { user: { select: { id: true, firstName: true, lastName: true } } } },
+        uploadedBy: {
+          include: {
+            user: {
+              select: { id: true, firstName: true, lastName: true },
+            },
+          },
+        },
         subject: true,
       },
     });
@@ -199,11 +185,48 @@ export class FilesService implements OnModuleInit {
         skip,
         take: limit,
         include: {
-          uploadedBy: { include: { user: { select: { id: true, firstName: true, lastName: true } } } },
+          uploadedBy: {
+            include: {
+              user: {
+                select: { id: true, firstName: true, lastName: true },
+              },
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.file.count({ where: { subjectId } }),
+    ]);
+
+    return {
+      data: files,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  /**
+   * Get all files (for students to browse)
+   */
+  async getAllFiles(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    const [files, total] = await Promise.all([
+      this.prisma.file.findMany({
+        skip,
+        take: limit,
+        include: {
+          uploadedBy: {
+            include: {
+              user: {
+                select: { id: true, firstName: true, lastName: true },
+              },
+            },
+          },
+          subject: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.file.count(),
     ]);
 
     return {
@@ -229,18 +252,10 @@ export class FilesService implements OnModuleInit {
       throw new BadRequestException('You can only delete your own files');
     }
 
-    // Delete from S3 if enabled
-    if (this.s3Enabled && this.s3Client) {
-      try {
-        await this.s3Client.send(
-          new DeleteObjectCommand({
-            Bucket: this.bucket,
-            Key: file.storageKey,
-          }),
-        );
-      } catch (error) {
-        this.logger.warn(`Failed to delete S3 object: ${file.storageKey}`);
-      }
+    // Delete from disk
+    const filePath = path.join(this.uploadDir, file.storageKey);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
     }
 
     // Delete metadata

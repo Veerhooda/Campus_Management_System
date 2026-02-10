@@ -46,15 +46,15 @@
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │   👨‍🎓 STUDENTS        👨‍🏫 FACULTY         🔧 ADMIN        🎯 ORGANIZER │
-│   ┌─────────┐       ┌─────────┐       ┌─────────┐      ┌─────────┐ │
-│   │Dashboard│       │ Classes │       │ Users   │      │ Events  │ │
-│   │Courses  │       │Attendance│      │ Reports │      │Planning │ │
-│   │Schedule │       │ Grading │       │ Audit   │      │   AI    │ │
-│   └─────────┘       └─────────┘       └─────────┘      └─────────┘ │
+│   ┌─────────┐       ┌─────────┐       ┌─────────┐      ┌─────────┐  │
+│   │Dashboard│       │ Classes │       │ Users   │      │ Events  │  │
+│   │Courses  │       │Attendance│      │ Reports │      │Planning │  │
+│   │Schedule │       │ Grading │       │ Audit   │      │   AI    │  │
+│   └─────────┘       └─────────┘       └─────────┘      └─────────┘  │
 │                                                                     │
 │   ────────────────── Unified Experience ──────────────────────────  │
 │                                                                     │
-│   🌙 Dark Mode   📱 Responsive   🔐 Secure   ⚡ Fast   ♿ Accessible │
+│   🌙 Dark Mode   📱 Responsive   🔐 Secure   ⚡ Fast   ♿ Accessible   │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -78,8 +78,8 @@
 ### 📚 Academic Management
 
 - **Smart Timetable** — Conflict detection for classes, teachers, rooms
-- **Attendance Tracking** — Bulk marking with analytics
-- **Course Management** — Subject enrollment & tracking
+- **Attendance Tracking** — Bulk marking with per-student analytics
+- **Notes & Materials** — Faculty upload with drag-and-drop, student browse & download
 
 ### 🎉 Campus Life
 
@@ -90,8 +90,8 @@
 ### 🔔 Communication
 
 - Real-time notifications with read/unread tracking
-- Bulk announcements to specific roles or users
-- File sharing with S3-compatible storage
+- Bulk broadcast announcements to specific roles
+- File storage with local disk fallback (S3-compatible when configured)
 
 ---
 
@@ -244,8 +244,10 @@ npm run dev
 - [x] Attendance tracking & analytics
 - [x] Event management with registration
 - [x] Grievance & maintenance ticketing
-- [x] File storage integration
+- [x] File storage (local disk + S3-compatible)
+- [x] Notes upload (faculty) & download (student)
 - [x] Notification system
+- [x] Broadcast announcements
 - [ ] Real-time WebSocket updates
 - [ ] Mobile app (React Native)
 - [ ] AI-powered course recommendations

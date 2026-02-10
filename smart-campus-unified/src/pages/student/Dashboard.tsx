@@ -227,14 +227,14 @@ const StudentDashboard: React.FC = () => {
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { icon: 'payments', label: 'Pay Fees' },
-                { icon: 'event_busy', label: 'Req. Leave' },
-                { icon: 'description', label: 'Transcript' },
-                { icon: 'meeting_room', label: 'Book Room' },
+                { icon: 'payments', label: 'Pay Fees', path: '' },
+                { icon: 'event_busy', label: 'Req. Leave', path: '' },
+                { icon: 'support_agent', label: 'Grievances', path: '/student/grievances' },
+                { icon: 'build', label: 'Maintenance', path: '/student/maintenance' },
               ].map((action) => (
                 <button 
                   key={action.label}
-                  onClick={() => alert(`${action.label} feature coming soon!`)}
+                  onClick={() => action.path ? navigate(action.path) : alert(`${action.label} feature coming soon!`)}
                   className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary transition-all group border border-transparent hover:border-slate-200 dark:hover:border-slate-600"
                 >
                   <span className="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">{action.icon}</span>

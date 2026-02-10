@@ -12,12 +12,12 @@ const recentLogs = [
 
 // Quick action navigation mapping
 const quickActionRoutes: Record<string, string> = {
-  'Add User': '/admin/dashboard', // Would be /admin/users when implemented
+  'Add User': '/admin/users',
   'Create Event': '/admin/events',
-  'Broadcast': '/admin/notifications',
+  'Broadcast': '/admin/broadcast',
   'Grievances': '/admin/grievances',
-  'Analytics': '/admin/dashboard', // Would be /admin/analytics when implemented
-  'Settings': '/admin/dashboard', // Would be /admin/settings when implemented
+  'Analytics': '/admin/dashboard',
+  'Settings': '/admin/dashboard',
 };
 
 const AdminDashboard: React.FC = () => {

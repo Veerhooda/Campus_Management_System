@@ -1,6 +1,6 @@
 # Contributing to AIT Smart Campus
 
-Thank you for your interest in contributing to AIT Smart Campus! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to AIT Smart Campus! This guide covers both the **backend** (`ait-cms-backend/`) and **frontend** (`smart-campus-unified/`) projects.
 
 ## 📋 Table of Contents
 
@@ -20,23 +20,26 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/ait-cms-backend.git
-   cd ait-cms-backend
+   git clone https://github.com/YOUR_USERNAME/AIT_CMS.git
+   cd AIT_CMS
    ```
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/ORIGINAL_OWNER/ait-cms-backend.git
+   git remote add upstream https://github.com/veerhooda/AIT_CMS.git
    ```
-4. **Install dependencies**:
+4. **Set up the backend**:
    ```bash
+   cd ait-cms-backend
    npm install
-   ```
-5. **Set up your environment**:
-   ```bash
    cp .env.example .env
    docker-compose up -d
    npm run db:push
    npm run db:seed
+   ```
+5. **Set up the frontend**:
+   ```bash
+   cd ../smart-campus-unified
+   npm install
    ```
 
 ## Development Workflow
@@ -114,6 +117,15 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 - Use **kebab-case** for file names: `user-profile.service.ts`
 - Use **PascalCase** for classes: `UserProfileService`
 - Use **camelCase** for variables and functions
+
+### React (Frontend)
+
+- Use **functional components** with hooks
+- Keep components focused — one component per file
+- Use **TypeScript interfaces** for props
+- Service functions go in `services/data.ts`, not in components
+- Use the shared design tokens from `index.css`
+- Validate builds with `npx tsc --noEmit` before committing
 
 ## Commit Messages
 

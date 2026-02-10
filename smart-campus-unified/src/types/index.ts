@@ -132,6 +132,26 @@ export enum TicketPriority {
   CRITICAL = 'Critical',
 }
 
+// Maintenance Request Types
+export interface MaintenanceTicket {
+  id: string;
+  title: string;
+  description: string;
+  location?: string;
+  priority?: string;
+  status: TicketStatus;
+  resolution?: string;
+  createdAt: string;
+  updatedAt: string;
+  submittedById: string;
+  submittedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+}
+
 // Timetable Types
 export type SlotType = 'LECTURE' | 'LAB' | 'TUTORIAL' | 'SEMINAR';
 

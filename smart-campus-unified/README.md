@@ -21,12 +21,12 @@
 
 ### 🎯 Role-Based Portals
 
-| Portal           | Features                                                  |
-| ---------------- | --------------------------------------------------------- |
-| 👨‍🎓 **Student**   | Dashboard, timetable, attendance stats, notifications     |
-| 👨‍🏫 **Faculty**   | Class schedule, attendance marking, bulk operations       |
-| 🔧 **Admin**     | System overview, grievance management, user management    |
-| 🎯 **Organizer** | Event creation, calendar view, AI suggestions, publishing |
+| Portal           | Features                                                                        |
+| ---------------- | ------------------------------------------------------------------------------- |
+| 👨‍🎓 **Student**   | Dashboard, timetable, attendance stats, notes download, grievances, maintenance |
+| 👨‍🏫 **Faculty**   | Class schedule, attendance marking, notes upload, bulk operations               |
+| 🔧 **Admin**     | System overview, user management, grievances, broadcast, events                 |
+| 🎯 **Organizer** | Event creation, calendar view, AI suggestions, publishing                       |
 
 ### 🔗 Full API Integration
 
@@ -99,14 +99,20 @@ src/
 │   ├── admin/               # Admin-only pages
 │   │   ├── Dashboard.tsx    # System overview
 │   │   ├── Grievances.tsx   # Ticket management
+│   │   ├── UserManagement.tsx # User CRUD & roles
+│   │   ├── Broadcast.tsx    # Role-targeted announcements
 │   │   └── OrganizerDashboard.tsx
 │   │
 │   ├── faculty/             # Faculty-only pages
 │   │   ├── Dashboard.tsx    # Today's schedule
-│   │   └── Attendance.tsx   # Bulk attendance marking
+│   │   ├── Attendance.tsx   # Bulk attendance marking
+│   │   └── NotesUpload.tsx  # Drag-drop file upload
 │   │
 │   ├── student/             # Student-only pages
-│   │   └── Dashboard.tsx    # Classes, attendance stats
+│   │   ├── Dashboard.tsx    # Classes, attendance stats
+│   │   ├── Notes.tsx        # Browse & download materials
+│   │   ├── Grievances.tsx   # Submit grievance tickets
+│   │   └── MaintenanceRequests.tsx
 │   │
 │   ├── shared/              # Cross-role pages
 │   │   ├── Schedule.tsx     # Grid & list timetable view
@@ -116,7 +122,7 @@ src/
 │   └── auth/
 │       └── LoginPage.tsx    # Quick login buttons
 │
-├── services/                # 🆕 API Integration Layer
+├── services/                # API Integration Layer
 │   ├── api.ts              # Axios client + JWT interceptors
 │   ├── auth.ts             # Login, logout, token management
 │   ├── data.ts             # All data services
@@ -166,9 +172,20 @@ eventService.getEvents(); // All events
 eventService.createEvent(data); // Create new event
 eventService.publishEvent(id); // Publish draft
 
+// Files & Notes
+fileService.upload(file, subjectId?); // Upload file (multipart)
+fileService.getAll(page, limit); // Browse all files
+fileService.getMyFiles(); // Teacher's own uploads
+fileService.getDownloadUrl(id); // Get download URL
+fileService.delete(id); // Delete own file
+
 // Grievances
 grievanceService.getGrievances(); // Admin ticket list
 grievanceService.updateStatus(id, status); // Update ticket
+
+// Maintenance
+maintenanceService.getRequests(); // Student's requests
+maintenanceService.createRequest(data); // Submit new request
 ```
 
 ---
