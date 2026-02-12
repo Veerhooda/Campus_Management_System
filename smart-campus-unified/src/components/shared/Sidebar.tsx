@@ -30,6 +30,7 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
     { icon: 'calendar_month', label: 'Schedule', path: '/faculty/schedule' },
     { icon: 'check_circle', label: 'Mark Attendance', path: '/faculty/attendance' },
     { icon: 'upload_file', label: 'Upload Notes', path: '/faculty/notes' },
+    { icon: 'campaign', label: 'Broadcast', path: '/faculty/broadcast' },
     ...commonItems,
   ];
 

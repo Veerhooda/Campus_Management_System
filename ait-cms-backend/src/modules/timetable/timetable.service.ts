@@ -241,8 +241,19 @@ export class TimetableService {
   /**
    * Get all classes (for admin lookups)
    */
-  async getAllClasses() {
+   /**
+   * Get all classes (filtered for faculty)
+   */
+  async getAllClasses(user?: any) {
+    let where = {};
+
+    // If teacher, filter by their department
+    if (user && user.teacherProfile) {
+      where = { departmentId: user.teacherProfile.departmentId };
+    }
+
     return this.prisma.class.findMany({
+      where,
       include: { department: true },
       orderBy: [{ department: { name: 'asc' } }, { year: 'asc' }, { section: 'asc' }],
     });

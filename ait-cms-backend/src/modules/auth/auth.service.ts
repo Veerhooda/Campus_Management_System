@@ -48,6 +48,8 @@ export class AuthService {
         roles: {
           select: { role: true },
         },
+        studentProfile: true, // Add these
+        teacherProfile: true,
       },
     });
 
@@ -85,6 +87,8 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         roles,
+        studentProfile: user.studentProfile,
+        teacherProfile: user.teacherProfile,
       },
     };
   }

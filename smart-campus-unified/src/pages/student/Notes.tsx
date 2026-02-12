@@ -48,32 +48,7 @@ const Notes: React.FC = () => {
 
   const handleDownload = (file: FileRecord) => {
     const url = fileService.getDownloadUrl(file.id);
-    // Open in new tab — browser will handle the download via Content-Disposition header
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    // Attach token for authenticated download
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      // Use fetch for authenticated download
-      fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-        .then(res => res.blob())
-        .then(blob => {
-          const blobUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = blobUrl;
-          a.download = file.originalName;
-          a.click();
-          URL.revokeObjectURL(blobUrl);
-        })
-        .catch(() => {
-          // Fallback: open directly
-          window.open(url, '_blank');
-        });
-    } else {
-      link.click();
-    }
+    window.open(url, '_blank');
   };
 
   return (

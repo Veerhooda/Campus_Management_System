@@ -7,6 +7,18 @@ export interface User {
   roles: UserRole[];
   phone?: string;
   avatar?: string;
+  studentProfile?: {
+    id: string;
+    rollNumber: string;
+    registrationNumber?: string;
+    enrollmentYear: number;
+    classId: string;
+  };
+  teacherProfile?: {
+    id: string;
+    employeeId: string;
+    departmentId: string;
+  };
 }
 
 // Backend uses uppercase roles

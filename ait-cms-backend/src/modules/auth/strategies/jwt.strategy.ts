@@ -36,6 +36,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         roles: {
           select: { role: true },
         },
+        teacherProfile: true,
+        studentProfile: true,
       },
     });
 
@@ -52,6 +54,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       id: user.id,
       email: user.email,
       roles: user.roles.map((r) => r.role),
+      teacherProfile: user.teacherProfile,
+      studentProfile: user.studentProfile,
     };
   }
 }

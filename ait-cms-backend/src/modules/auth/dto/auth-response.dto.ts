@@ -9,5 +9,7 @@ export class AuthResponseDto {
     firstName: string;
     lastName: string;
     roles: Role[];
+    studentProfile?: any;
+    teacherProfile?: any;
   };
 }

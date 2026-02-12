@@ -42,8 +42,10 @@ export class StudentsController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('departmentId') departmentId?: string,
+    @Query('year', new DefaultValuePipe(0), ParseIntPipe) year?: number,
   ) {
-    return this.studentsService.findAll(page, limit);
+    return this.studentsService.findAll(page, limit, departmentId, year === 0 ? undefined : year);
   }
 
   /**

@@ -57,8 +57,53 @@ const LoginPage: React.FC = () => {
     setPassword('password123');
   };
 
+  /* Animation State */
+  const [showSplash, setShowSplash] = useState(true);
+  const [animateOut, setAnimateOut] = useState(false);
+
+  useEffect(() => {
+    // Sequence
+    const seq = async () => {
+      // 1. Hold for a moment
+      await new Promise(r => setTimeout(r, 2000));
+      // 2. Animate Out
+      setAnimateOut(true);
+      // 3. Remove from DOM after transition
+      await new Promise(r => setTimeout(r, 1000));
+      setShowSplash(false);
+    };
+    seq();
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row overflow-hidden bg-background-light dark:bg-background-dark font-display">
+    <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-background-light dark:bg-background-dark font-display relative">
+      
+      {/* Premium Splash Overlay */}
+      {showSplash && (
+        <div 
+          className={`fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center transition-opacity duration-1000 ease-in-out ${animateOut ? 'opacity-0' : 'opacity-100'}`}
+        >
+          {/* Logo Animation */}
+          <div className={`relative transition-all duration-1000 ease-out transform ${animateOut ? 'scale-110' : 'scale-100'}`}>
+             <img 
+               src="/assets/ait-logo.png" 
+               alt="AIT Logo" 
+               className="relative w-32 h-32 md:w-40 md:h-40 object-contain mix-blend-multiply animate-fade-in"
+             />
+          </div>
+
+          {/* Text Animation */}
+          <div className="mt-8 text-center overflow-hidden">
+             <p className="text-slate-400 text-sm md:text-base font-medium tracking-[0.2em] uppercase animate-slide-in">
+               Onward to Glory
+             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content (Fades in slightly as splash fades out) */}
+      <div className={`flex flex-col md:flex-row w-full h-full transition-all duration-1000 transform ${animateOut ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+      
       {/* Left Panel — Campus Image Slideshow */}
       <div className="relative hidden md:flex md:w-1/2 lg:w-7/12 xl:w-3/5 flex-col justify-between overflow-hidden">
         {/* Slideshow Images */}
@@ -141,9 +186,9 @@ const LoginPage: React.FC = () => {
       </div>
 
       {/* Right Login Form Panel */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 lg:p-24 bg-white dark:bg-background-dark relative w-full md:w-1/2 lg:w-5/12 xl:w-2/5 animate-fade-in">
+      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 lg:p-24 bg-white dark:bg-background-dark relative w-full md:w-1/2 lg:w-5/12 xl:w-2/5">
         {/* Mobile Header */}
-        <div className="absolute top-6 left-6 md:hidden flex items-center gap-2">
+        <div className="absolute top-6 left-6 md:hidden flex items-center gap-2 opacity-0">
           <img src="/assets/ait-logo.png" alt="AIT Logo" className="w-8 h-8 rounded-lg bg-white dark:bg-white p-0.5" />
           <span className="text-primary font-bold text-lg">AIT Smart Campus</span>
         </div>
@@ -152,7 +197,7 @@ const LoginPage: React.FC = () => {
           {/* Heading with logo */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3 mb-3">
-              <img src="/assets/ait-logo.png" alt="AIT Logo" className="w-11 h-11 rounded-xl shadow-sm hidden md:block bg-white dark:bg-slate-100 p-0.5" />
+              <div className="w-11 h-11" /> {/* Spacer for animated logo landing */}
               <div>
                 <h2 className="text-slate-900 dark:text-white text-2xl font-bold leading-tight tracking-tight">Welcome Back</h2>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">Sign in to AIT Smart Campus Portal</p>
@@ -238,7 +283,7 @@ const LoginPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: 'Admin', email: 'admin@ait.edu', color: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
-                { label: 'Faculty', email: 'faculty@ait.edu', color: 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' },
+                { label: 'Faculty', email: 'smore@ait.edu', color: 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' },
                 { label: 'Student', email: 'student@ait.edu', color: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' },
                 { label: 'Organizer', email: 'organizer@ait.edu', color: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400' },
               ].map((demo) => (
@@ -253,18 +298,10 @@ const LoginPage: React.FC = () => {
               ))}
             </div>
           </div>
-
-          {/* Footer Links */}
-          <div className="mt-auto pt-6 flex flex-col items-center gap-2">
-            <p className="text-xs text-slate-400 italic">"Onward to Glory"</p>
-            <div className="flex gap-6">
-              <a className="text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">Help Center</a>
-              <span className="text-slate-300 dark:text-slate-700">|</span>
-              <a className="text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">System Status</a>
-            </div>
-          </div>
         </div>
       </div>
+      
+      </div> 
     </div>
   );
 };

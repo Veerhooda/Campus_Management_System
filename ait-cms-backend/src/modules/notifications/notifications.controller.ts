@@ -35,7 +35,7 @@ export class NotificationsController {
    * Create bulk notifications (Admin only)
    */
   @Post('bulk')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.TEACHER)
   async createBulk(@Body() dto: BulkNotificationDto) {
     return this.notificationsService.createBulk(dto);
   }

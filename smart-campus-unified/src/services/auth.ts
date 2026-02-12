@@ -12,6 +12,18 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   roles: UserRole[];
+  studentProfile?: {
+    id: string;
+    rollNumber: string;
+    registrationNumber?: string;
+    enrollmentYear: number;
+    classId: string;
+  };
+  teacherProfile?: {
+    id: string;
+    employeeId: string;
+    departmentId: string;
+  };
 }
 
 export type UserRole = 'STUDENT' | 'TEACHER' | 'ADMIN' | 'ORGANIZER';

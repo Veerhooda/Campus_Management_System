@@ -5,6 +5,10 @@ export class CreateStudentProfileDto {
   @IsNotEmpty({ message: 'Roll number is required' })
   rollNumber: string;
 
+  @IsString()
+  @IsNotEmpty({ message: 'Registration number is required' })
+  registrationNumber: string;
+
   @IsInt()
   @Min(2000)
   @Max(2100)
@@ -19,6 +23,10 @@ export class UpdateStudentProfileDto {
   @IsString()
   @IsOptional()
   rollNumber?: string;
+
+  @IsString()
+  @IsOptional()
+  registrationNumber?: string;
 
   @IsInt()
   @Min(2000)

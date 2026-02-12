@@ -107,8 +107,8 @@ export const attendanceService = {
     return response.data.data;
   },
 
-  markBulkAttendance: async (records: Array<{ studentId: string; timetableSlotId: string; date: string; status: string }>): Promise<void> => {
-    await api.post('/attendance/bulk', { records });
+  markBulkAttendance: async (timetableSlotId: string, date: string, attendance: Array<{ studentId: string; present: boolean }>): Promise<void> => {
+    await api.post('/attendance/bulk', { timetableSlotId, date, attendance });
   },
 };
 
@@ -150,10 +150,28 @@ export const notificationService = {
   },
 };
 
+// Teacher service
+export const teacherService = {
+  getProfile: async (): Promise<TeacherProfile> => {
+    const response = await api.get<ApiResponse<TeacherProfile>>('/teachers/me');
+    return response.data.data;
+  },
+
+  getMySubjects: async (): Promise<SubjectInfo[]> => {
+    const response = await api.get<ApiResponse<SubjectInfo[]>>('/teachers/my-subjects');
+    return response.data.data;
+  },
+
+  getTeachersByDepartment: async (departmentId: string): Promise<TeacherInfo[]> => {
+    const response = await api.get<ApiResponse<TeacherInfo[]>>(`/teachers/department/${departmentId}`);
+    return response.data.data;
+  },
+};
+
 // Student service
 export const studentService = {
-  getStudents: async (page = 1, limit = 20, classId?: string): Promise<PaginatedResponse<Student>> => {
-    const response = await api.get<ApiResponse<PaginatedResponse<Student>>>('/students', { params: { page, limit, classId } });
+  getStudents: async (page = 1, limit = 20, classId?: string, departmentId?: string, year?: number): Promise<PaginatedResponse<Student>> => {
+    const response = await api.get<ApiResponse<PaginatedResponse<Student>>>('/students', { params: { page, limit, classId, departmentId, year } });
     return response.data.data;
   },
 

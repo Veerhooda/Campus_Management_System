@@ -6,6 +6,7 @@ import { UserRole } from './types';
 // Pages
 import LoginPage from './pages/auth/LoginPage';
 import Layout from './components/shared/Layout';
+import LoadingScreen from './components/shared/LoadingScreen';
 
 // Student Pages
 import StudentDashboard from './pages/student/Dashboard';
@@ -14,6 +15,7 @@ import StudentDashboard from './pages/student/Dashboard';
 import FacultyDashboard from './pages/faculty/Dashboard';
 import AttendanceMarking from './pages/faculty/Attendance';
 import NotesUpload from './pages/faculty/NotesUpload';
+import FacultyBroadcast from './pages/faculty/Broadcast';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -33,16 +35,6 @@ import Notifications from './pages/shared/Notifications';
 import Schedule from './pages/shared/Schedule';
 import EventCreator from './pages/shared/EventCreator';
 
-// Loading spinner component
-const LoadingSpinner: React.FC = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-      <p className="text-slate-500 dark:text-slate-400 font-medium">Loading...</p>
-    </div>
-  </div>
-);
-
 // Protected route wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: UserRole[] }> = ({ 
   children, 
@@ -51,7 +43,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: UserR
   const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <LoadingScreen />;
   }
 
   if (!isAuthenticated) {
@@ -95,7 +87,7 @@ const App: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <LoadingScreen />;
   }
 
   return (
@@ -155,6 +147,11 @@ const App: React.FC = () => {
         <Route path="/faculty/attendance" element={
           <ProtectedRoute allowedRoles={['TEACHER']}>
             <AttendanceMarking />
+          </ProtectedRoute>
+        } />
+        <Route path="/faculty/broadcast" element={
+          <ProtectedRoute allowedRoles={['TEACHER']}>
+            <FacultyBroadcast />
           </ProtectedRoute>
         } />
         <Route path="/faculty/schedule" element={

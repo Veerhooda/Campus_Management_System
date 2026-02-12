@@ -35,4 +35,25 @@ export class CreateUserDto {
   @IsEnum(Role, { each: true, message: 'Invalid role' })
   @IsNotEmpty({ message: 'At least one role is required' })
   roles: Role[];
+
+  // Student Profile Fields
+  @IsString()
+  @IsOptional()
+  registrationNumber?: string;
+
+  @IsString()
+  @IsOptional()
+  departmentId?: string;
+
+  @IsOptional()
+  year?: number;
+
+  @IsString()
+  @IsOptional()
+  section?: string;
+
+  // Teacher Profile Fields
+  @IsString()
+  @IsOptional()
+  employeeId?: string;
 }

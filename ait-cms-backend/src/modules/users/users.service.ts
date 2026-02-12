@@ -19,7 +19,19 @@ export class UsersService {
    * Create a new user with roles
    */
   async create(createUserDto: CreateUserDto) {
-    const { email, password, firstName, lastName, phone, roles } = createUserDto;
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      roles,
+      registrationNumber,
+      departmentId,
+      year,
+      section,
+      employeeId,
+    } = createUserDto;
 
     // Check if email already exists
     const existingUser = await this.prisma.user.findUnique({
@@ -33,6 +45,52 @@ export class UsersService {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
 
+    // Prepare profile data
+    let studentProfileData = undefined;
+    let teacherProfileData = undefined;
+
+    if (roles.includes(Role.STUDENT)) {
+      if (!departmentId || !year || !section || !registrationNumber) {
+        throw new ConflictException(
+          'Student requires department, year, section, and registration number',
+        );
+      }
+
+      // Find class
+      const studentClass = await this.prisma.class.findFirst({
+        where: {
+          departmentId,
+          year: +year,
+          section,
+        },
+      });
+
+      if (!studentClass) {
+        throw new NotFoundException('Class not found for the given details');
+      }
+
+      studentProfileData = {
+        create: {
+          rollNumber: registrationNumber.slice(-4), // Simple roll no generation
+          registrationNumber,
+          enrollmentYear: new Date().getFullYear(),
+          classId: studentClass.id,
+        },
+      };
+    }
+
+    if (roles.includes(Role.TEACHER)) {
+      if (!departmentId) {
+        throw new ConflictException('Faculty requires a department');
+      }
+      teacherProfileData = {
+        create: {
+          employeeId: employeeId || `EMP${Date.now()}`,
+          departmentId,
+        },
+      };
+    }
+
     // Create user with roles in a transaction
     const user = await this.prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
@@ -45,9 +103,18 @@ export class UsersService {
           roles: {
             create: roles.map((role) => ({ role })),
           },
+          studentProfile: studentProfileData,
+          teacherProfile: teacherProfileData,
+          // Initialize empty profiles for others if needed
+          adminProfile: roles.includes(Role.ADMIN) ? { create: {} } : undefined,
+          organizerProfile: roles.includes(Role.ORGANIZER)
+            ? { create: {} }
+            : undefined,
         },
         include: {
           roles: { select: { role: true } },
+          studentProfile: true,
+          teacherProfile: true,
         },
       });
 

@@ -111,8 +111,9 @@ model RefreshToken {
 model Student {
   id             String @id @default(uuid())
   userId         String @unique @map("user_id")
-  rollNumber     String @unique @map("roll_number")
-  enrollmentYear Int    @map("enrollment_year")
+  rollNumber         String @unique @map("roll_number")
+  registrationNumber String @unique @map("registration_number")
+  enrollmentYear     Int    @map("enrollment_year")
 
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   classId String @map("class_id")
@@ -236,6 +237,8 @@ model TimetableSlot {
   teacher Teacher @relation(fields: [teacherId], references: [id])
   room    Room    @relation(fields: [roomId], references: [id])
 
+  attendance Attendance[]
+
   @@unique([dayOfWeek, startTime, roomId]) // Room conflict prevention
   @@unique([dayOfWeek, startTime, teacherId]) // Teacher conflict prevention
   @@unique([dayOfWeek, startTime, classId]) // Class conflict prevention
@@ -249,17 +252,19 @@ model Attendance {
   date      DateTime @db.Date
   isPresent Boolean  @map("is_present")
 
-  studentId  String @map("student_id")
-  subjectId  String @map("subject_id")
-  markedById String @map("marked_by_id") // Teacher who marked
+  studentId       String @map("student_id")
+  subjectId       String @map("subject_id")
+  timetableSlotId String @map("timetable_slot_id") // Link to specific lecture slot
+  markedById      String @map("marked_by_id") // Teacher who marked
 
-  student  Student @relation(fields: [studentId], references: [id])
-  subject  Subject @relation(fields: [subjectId], references: [id])
-  markedBy Teacher @relation(fields: [markedById], references: [id])
+  student       Student       @relation(fields: [studentId], references: [id])
+  subject       Subject       @relation(fields: [subjectId], references: [id])
+  timetableSlot TimetableSlot @relation(fields: [timetableSlotId], references: [id])
+  markedBy      Teacher       @relation(fields: [markedById], references: [id])
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@unique([date, studentId, subjectId]) // One record per student per subject per day
+  @@unique([date, studentId, timetableSlotId]) // Allow multiple lectures of same subject per day
   @@map("attendance")
 }
 

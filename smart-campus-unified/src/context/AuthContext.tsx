@@ -44,6 +44,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             firstName: authUser.firstName,
             lastName: authUser.lastName,
             roles: authUser.roles,
+            studentProfile: authUser.studentProfile,
+            teacherProfile: authUser.teacherProfile,
           };
           setUser(userData);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
@@ -73,6 +75,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         firstName: response.user.firstName,
         lastName: response.user.lastName,
         roles: response.user.roles,
+        studentProfile: response.user.studentProfile,
+        teacherProfile: response.user.teacherProfile,
       };
 
       setUser(userData);

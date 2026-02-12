@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from '../../prisma';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class FilesService implements OnModuleInit {
@@ -207,11 +208,39 @@ export class FilesService implements OnModuleInit {
   /**
    * Get all files (for students to browse)
    */
-  async getAllFiles(page = 1, limit = 20) {
+  /**
+   * Get all files (segregated by department for students)
+   */
+  async getAllFiles(user: any, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
+    
+    // Check if user is a student
+    const isStudent = user.roles && user.roles.some((r: any) => r.role === 'STUDENT');
+    let subjectFilter: any = {};
+
+    if (isStudent) {
+      // Fetch student's department via class
+      const student = await this.prisma.student.findUnique({
+        where: { userId: user.id },
+        include: { class: true },
+      });
+
+      if (student && student.class) {
+        // Filter: Files linked to subjects in Student's Dept OR Files with NO subject (general)
+        // AND Files linked to *NO* subject (if we want general files to be visible to all)
+        // Logic: (subject.departmentId == student.deptId) OR (subjectId is null)
+        subjectFilter = {
+          OR: [
+            { subject: { departmentId: student.class.departmentId } },
+            { subjectId: null },
+          ],
+        };
+      }
+    }
 
     const [files, total] = await Promise.all([
       this.prisma.file.findMany({
+        where: subjectFilter,
         skip,
         take: limit,
         include: {
@@ -226,7 +255,7 @@ export class FilesService implements OnModuleInit {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.file.count(),
+      this.prisma.file.count({ where: subjectFilter }),
     ]);
 
     return {

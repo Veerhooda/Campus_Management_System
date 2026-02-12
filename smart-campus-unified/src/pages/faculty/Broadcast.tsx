@@ -1,57 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { userService, notificationService, timetableService, studentService, teacherService } from '../../services';
-import { User, Department } from '../../types';
+import { notificationService, studentService, teacherService } from '../../services';
+import { Student, Teacher } from '../../types';
 
 const AUDIENCE_OPTIONS = [
-  { label: 'Students', value: 'STUDENT' },
-  { label: 'Faculty', value: 'TEACHER' },
-  { label: 'Admins', value: 'ADMIN' },
-  { label: 'Everyone', value: 'ALL' },
+  { label: 'My Department Students', value: 'DEPT_STUDENT' },
+  { label: 'My Department Faculty', value: 'DEPT_TEACHER' },
 ];
 
 const NOTIFICATION_TYPES = [
   { label: 'Announcement', value: 'ANNOUNCEMENT' },
   { label: 'Event', value: 'EVENT' },
-  { label: 'System', value: 'SYSTEM' },
-  { label: 'Maintenance', value: 'MAINTENANCE' },
 ];
 
-const Broadcast: React.FC = () => {
+const FacultyBroadcast: React.FC = () => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [type, setType] = useState('ANNOUNCEMENT');
-  const [audience, setAudience] = useState('STUDENT');
+  const [audience, setAudience] = useState('DEPT_STUDENT');
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [history, setHistory] = useState<{ title: string; audience: string; time: string }[]>([]);
 
-  // Filters
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [selectedDept, setSelectedDept] = useState<string>('');
+  const [departmentId, setDepartmentId] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
 
   useEffect(() => {
-    loadDepartments();
+    loadProfile();
   }, []);
 
-  const loadDepartments = async () => {
+  const loadProfile = async () => {
     try {
-      const classes = await timetableService.getClasses();
-      const uniqueDepts = new Map<string, Department>();
-      classes.forEach(c => {
-        if (c.department) {
-          uniqueDepts.set(c.department.id, c.department);
-        }
-      });
-      setDepartments(Array.from(uniqueDepts.values()));
+      const profile = await teacherService.getProfile();
+      if (profile && profile.departmentId) {
+        setDepartmentId(profile.departmentId);
+      } else {
+        setError('Could not fetch department information.');
+      }
     } catch (err) {
-      console.error('Failed to load departments', err);
+      console.error('Failed to load profile', err);
+      setError('Failed to load profile.');
     }
   };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!departmentId) {
+      setError('Department information is missing.');
+      return;
+    }
+
     setSending(true);
     setError('');
     setSuccess('');
@@ -59,34 +57,18 @@ const Broadcast: React.FC = () => {
     try {
       let userIds: string[] = [];
 
-      if (audience === 'ALL') {
-        const roles = ['STUDENT', 'TEACHER', 'ADMIN'];
-        for (const role of roles) {
-          try {
-            const result = await userService.getUsersByRole(role, 1, 1000);
-            userIds.push(...result.data.map((u: User) => u.id));
-          } catch { /* skip */ }
-        }
-      } else if (audience === 'STUDENT') {
-        // Use student service with filters
-        // Fetch all pages if needed, but for now fetch a large limit
-        // TODO: Backend should probably handle "notify all matching filter" instead of fetching IDs here
-        // But for now we fetch IDs.
+      if (audience === 'DEPT_STUDENT') {
         const result = await studentService.getStudents(
           1, 
           1000, 
           undefined, 
-          selectedDept || undefined, 
+          departmentId, 
           selectedYear ? parseInt(selectedYear) : undefined
         );
-        userIds = result.data.map((s: any) => s.user.id);
-      } else if (audience === 'TEACHER' && selectedDept) {
-        const teachers = await teacherService.getTeachersByDepartment(selectedDept);
-        // @ts-ignore
-        userIds = teachers.data.map((t: any) => t.user.id);
-      } else {
-        const result = await userService.getUsersByRole(audience, 1, 1000);
-        userIds = result.data.map((u: User) => u.id);
+        userIds = result.data.map((s: Student) => s.userId);
+      } else if (audience === 'DEPT_TEACHER') {
+        const teachers = await teacherService.getTeachersByDepartment(departmentId);
+        userIds = teachers.filter((t: Teacher) => t.userId).map((t: Teacher) => t.userId);
       }
 
       if (userIds.length === 0) {
@@ -99,7 +81,7 @@ const Broadcast: React.FC = () => {
       setSuccess(`Broadcast sent to ${userIds.length} user(s) successfully!`);
       
       const audienceLabel = AUDIENCE_OPTIONS.find(a => a.value === audience)?.label || audience;
-      const filterLabel = selectedDept ? ` (${departments.find(d => d.id === selectedDept)?.code || 'Dept'})` : '';
+      const filterLabel = selectedYear ? ` (Year ${selectedYear})` : '';
       
       setHistory((prev) => [{ 
         title, 
@@ -123,9 +105,9 @@ const Broadcast: React.FC = () => {
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">campaign</span>
-          Broadcast Announcements
+          Department Broadcast
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Send notifications to groups of campus users</p>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Send notifications to your department's students and faculty</p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -133,7 +115,7 @@ const Broadcast: React.FC = () => {
         <div className="xl:col-span-2">
           <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
             <div className="p-5 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Compose Broadcast</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Compose Message</h3>
             </div>
             <form onSubmit={handleSend} className="p-6 space-y-5">
               {success && (
@@ -156,7 +138,6 @@ const Broadcast: React.FC = () => {
                     value={audience}
                     onChange={(e) => {
                       setAudience(e.target.value);
-                      setSelectedDept('');
                       setSelectedYear('');
                     }}
                     className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
@@ -181,38 +162,22 @@ const Broadcast: React.FC = () => {
               </div>
 
               {/* Filters */}
-              {(audience === 'STUDENT' || audience === 'TEACHER') && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-100 dark:border-slate-700">
+              {audience === 'DEPT_STUDENT' && (
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-100 dark:border-slate-700">
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Filter by Department</label>
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Filter by Year</label>
                     <select
-                      value={selectedDept}
-                      onChange={(e) => setSelectedDept(e.target.value)}
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
                       className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
                     >
-                      <option value="">All Departments</option>
-                      {departments.map((dept) => (
-                        <option key={dept.id} value={dept.id}>{dept.name}</option>
-                      ))}
+                      <option value="">All Years</option>
+                      <option value="1">First Year (FE)</option>
+                      <option value="2">Second Year (SE)</option>
+                      <option value="3">Third Year (TE)</option>
+                      <option value="4">Fourth Year (BE)</option>
                     </select>
                   </div>
-                  
-                  {audience === 'STUDENT' && (
-                    <div>
-                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">Filter by Year</label>
-                      <select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                      >
-                        <option value="">All Years</option>
-                        <option value="1">First Year (FE)</option>
-                        <option value="2">Second Year (SE)</option>
-                        <option value="3">Third Year (TE)</option>
-                        <option value="4">Fourth Year (BE)</option>
-                      </select>
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -239,7 +204,7 @@ const Broadcast: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={sending}
+                disabled={sending || !departmentId}
                 className="w-full py-3 rounded-lg bg-primary text-white font-semibold shadow-md shadow-primary/20 hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px]">{sending ? 'hourglass_top' : 'send'}</span>
@@ -285,15 +250,11 @@ const Broadcast: React.FC = () => {
             <ul className="space-y-2 text-xs text-blue-800 dark:text-blue-400">
               <li className="flex items-start gap-1.5">
                 <span className="material-symbols-outlined text-[14px] mt-0.5">chevron_right</span>
-                Keep titles concise for better visibility
+                Use "My Dept Students" for official announcements
               </li>
               <li className="flex items-start gap-1.5">
                 <span className="material-symbols-outlined text-[14px] mt-0.5">chevron_right</span>
-                Use "Everyone" for campus-wide announcements
-              </li>
-              <li className="flex items-start gap-1.5">
-                <span className="material-symbols-outlined text-[14px] mt-0.5">chevron_right</span>
-                Target specific years/departments to reduce spam
+                Filter by year to reach specific batches
               </li>
             </ul>
           </div>
@@ -303,4 +264,4 @@ const Broadcast: React.FC = () => {
   );
 };
 
-export default Broadcast;
+export default FacultyBroadcast;

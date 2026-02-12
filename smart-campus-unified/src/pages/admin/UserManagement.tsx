@@ -24,7 +24,10 @@ const UserManagement: React.FC = () => {
   // Create user form state
   const [form, setForm] = useState({
     email: '', password: '', firstName: '', lastName: '', phone: '', roles: ['STUDENT'] as string[],
+    registrationNumber: '', departmentId: '', year: '1', section: 'A', employeeId: ''
   });
+
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
 
   const fetchUsers = async () => {
     try {
@@ -42,27 +45,74 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      // We use getClasses to extract unique departments since there isn't a direct public endpoint
+      // This is a safe workaround to get valid department IDs
+      const classes = await import('../../services').then(m => m.timetableService.getClasses());
+      const uniqueDepts = new Map<string, { id: string; name: string }>();
+      
+      classes.forEach(c => {
+        if (c.department) {
+          uniqueDepts.set(c.department.id, { id: c.department.id, name: c.department.name });
+        }
+      });
+      
+      setDepartments(Array.from(uniqueDepts.values()));
+    } catch (err) {
+      console.error('Failed to fetch departments', err);
+    }
+  };
+
   useEffect(() => { setPage(1); }, [roleFilter]);
-  useEffect(() => { fetchUsers(); }, [page, roleFilter]);
+  useEffect(() => { 
+    fetchUsers(); 
+    fetchDepartments();
+  }, [page, roleFilter]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
     setError('');
     try {
-      await userService.createUser(form);
+      // Prepare payload based on role
+      const payload: any = { ...form };
+      
+      // Clean up fields based on role
+      if (form.roles[0] === 'STUDENT') {
+        payload.year = parseInt(form.year);
+        // Ensure departmentId is set
+        if (!payload.departmentId) throw new Error('Department is required');
+      } else if (form.roles[0] === 'TEACHER') {
+        if (!payload.departmentId) throw new Error('Department is required');
+        delete payload.registrationNumber;
+        delete payload.year;
+        delete payload.section;
+      } else {
+        delete payload.registrationNumber;
+        delete payload.departmentId;
+        delete payload.year;
+        delete payload.section;
+        delete payload.employeeId;
+      }
+
+      await userService.createUser(payload);
       setShowCreateModal(false);
-      setForm({ email: '', password: '', firstName: '', lastName: '', phone: '', roles: ['STUDENT'] });
+      setForm({ 
+        email: '', password: '', firstName: '', lastName: '', phone: '', roles: ['STUDENT'],
+        registrationNumber: '', departmentId: '', year: '1', section: 'A', employeeId: ''
+      });
       setSuccessMsg('User created successfully!');
       setTimeout(() => setSuccessMsg(''), 3000);
       fetchUsers();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to create user');
+      setError(err?.response?.data?.message || err.message || 'Failed to create user');
     } finally {
       setCreating(false);
     }
   };
 
+  // ... (handlers for deactivate/reactivate/delete remain same)
   const handleDeactivate = async (id: string) => {
     if (!confirm('Are you sure you want to deactivate this user?')) return;
     try {
@@ -181,6 +231,7 @@ const UserManagement: React.FC = () => {
                         <div>
                           <p className="text-sm font-semibold text-slate-900 dark:text-white">{user.firstName} {user.lastName}</p>
                           {user.phone && <p className="text-xs text-slate-500">{user.phone}</p>}
+                          {user.studentProfile?.registrationNumber && <p className="text-xs text-slate-500">Reg: {user.studentProfile.registrationNumber}</p>}
                         </div>
                       </div>
                     </td>
@@ -253,7 +304,7 @@ const UserManagement: React.FC = () => {
       {/* Create User Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+          <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">Create New User</h2>
               <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
@@ -320,6 +371,81 @@ const UserManagement: React.FC = () => {
                   <option value="ORGANIZER">Organizer</option>
                 </select>
               </div>
+
+              {/* Dynamic Fields */}
+              {(form.roles[0] === 'STUDENT' || form.roles[0] === 'TEACHER') && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Branch / Department *</label>
+                  <select
+                    required
+                    value={form.departmentId}
+                    onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  >
+                    <option value="">Select Branch</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {form.roles[0] === 'STUDENT' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Year *</label>
+                      <select
+                        required
+                        value={form.year}
+                        onChange={(e) => setForm({ ...form, year: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                      >
+                        <option value="1">Year 1 (FE)</option>
+                        <option value="2">Year 2 (SE)</option>
+                        <option value="3">Year 3 (TE)</option>
+                        <option value="4">Year 4 (BE)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Section *</label>
+                      <select
+                        required
+                        value={form.section}
+                        onChange={(e) => setForm({ ...form, section: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                      >
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Registration Number *</label>
+                    <input
+                      type="text" required
+                      value={form.registrationNumber}
+                      onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                      placeholder="e.g. IT2024001"
+                    />
+                  </div>
+                </>
+              )}
+
+              {form.roles[0] === 'TEACHER' && (
+                 <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Employee ID (Optional)</label>
+                    <input
+                      type="text"
+                      value={form.employeeId}
+                      onChange={(e) => setForm({ ...form, employeeId: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                      placeholder="e.g. EMP001"
+                    />
+                  </div>
+              )}
+
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowCreateModal(false)}
                   className="flex-1 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"

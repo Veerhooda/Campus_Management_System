@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { fileService, timetableService } from '../../services';
+import { fileService, teacherService } from '../../services';
 import { FileRecord } from '../../services/data';
 
 interface Subject {
@@ -39,17 +39,11 @@ const NotesUpload: React.FC = () => {
   useEffect(() => {
     loadFiles();
 
-    // Load subjects from teacher's timetable
+    // Load subjects from teacher's department
     const loadSubjects = async () => {
       try {
-        const slots = await timetableService.getTeacherTimetable();
-        const uniqueSubjects = new Map<string, Subject>();
-        slots.forEach(slot => {
-          if (slot.subject && slot.subjectId) {
-            uniqueSubjects.set(slot.subjectId, { id: slot.subjectId, ...slot.subject });
-          }
-        });
-        setSubjects(Array.from(uniqueSubjects.values()));
+        const subjects = await teacherService.getMySubjects();
+        setSubjects(subjects.map(s => ({ id: s.id, name: s.name, code: s.code })));
       } catch (err) {
         console.error('Failed to load subjects:', err);
       }

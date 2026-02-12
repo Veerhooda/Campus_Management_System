@@ -25,6 +25,15 @@ export class AttendanceService {
       throw new NotFoundException('Teacher profile not found');
     }
 
+    // Get Slot to ensure it exists and get subjectId
+    const slot = await this.prisma.timetableSlot.findUnique({
+      where: { id: dto.timetableSlotId },
+    });
+
+    if (!slot) {
+      throw new NotFoundException('Timetable slot not found');
+    }
+
     const date = new Date(dto.date);
 
     // Create or update attendance records
@@ -32,19 +41,21 @@ export class AttendanceService {
       dto.attendance.map((record) =>
         this.prisma.attendance.upsert({
           where: {
-            date_studentId_subjectId: {
+            date_studentId_timetableSlotId: {
               studentId: record.studentId,
-              subjectId: dto.timetableSlotId, // Using slot as subject reference
+              timetableSlotId: dto.timetableSlotId,
               date,
             },
           },
           update: {
             isPresent: record.present,
             markedById: teacher.id,
+            subjectId: slot.subjectId,
           },
           create: {
             studentId: record.studentId,
-            subjectId: dto.timetableSlotId,
+            subjectId: slot.subjectId,
+            timetableSlotId: dto.timetableSlotId,
             date,
             isPresent: record.present,
             markedById: teacher.id,

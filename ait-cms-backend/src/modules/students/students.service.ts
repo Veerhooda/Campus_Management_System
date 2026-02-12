@@ -44,6 +44,7 @@ export class StudentsService {
       data: {
         userId,
         rollNumber: dto.rollNumber,
+        registrationNumber: dto.registrationNumber,
         enrollmentYear: dto.enrollmentYear,
         classId: dto.classId,
       },
@@ -60,11 +61,19 @@ export class StudentsService {
   /**
    * Get all students with pagination
    */
-  async findAll(page = 1, limit = 20) {
+  async findAll(page = 1, limit = 20, departmentId?: string, year?: number) {
     const skip = (page - 1) * limit;
+    const where: any = {};
+
+    if (departmentId || year) {
+      where.class = {};
+      if (departmentId) where.class.departmentId = departmentId;
+      if (year) where.class.year = year;
+    }
 
     const [students, total] = await Promise.all([
       this.prisma.student.findMany({
+        where,
         skip,
         take: limit,
         include: {
@@ -73,7 +82,7 @@ export class StudentsService {
         },
         orderBy: { rollNumber: 'asc' },
       }),
-      this.prisma.student.count(),
+      this.prisma.student.count({ where }),
     ]);
 
     return {

@@ -19,12 +19,12 @@ export class TimetableController {
 
   /**
    * GET /api/v1/timetable/lookup/classes
-   * Get all classes for dropdowns (Admin)
+   * Get all classes for dropdowns (Admin, Teacher)
    */
   @Get('lookup/classes')
-  @Roles(Role.ADMIN)
-  async getClasses() {
-    return this.timetableService.getAllClasses();
+  @Roles(Role.ADMIN, Role.TEACHER)
+  async getClasses(@CurrentUser() user: any) {
+    return this.timetableService.getAllClasses(user);
   }
 
   /**

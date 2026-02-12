@@ -17,7 +17,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { Role } from '@prisma/client';
 import { FilesService } from './files.service';
-import { Roles, CurrentUser } from '../../common/decorators';
+import { Roles, CurrentUser, Public } from '../../common/decorators';
 
 @Controller('files')
 export class FilesController {
@@ -49,6 +49,7 @@ export class FilesController {
    * GET /api/v1/files/:id/download
    * Download a file
    */
+  @Public()
   @Get(':id/download')
   async downloadFile(
     @Param('id', ParseUUIDPipe) id: string,
@@ -97,10 +98,11 @@ export class FilesController {
    */
   @Get('all')
   async getAllFiles(
+    @CurrentUser() user: any,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
   ) {
-    return this.filesService.getAllFiles(page, limit);
+    return this.filesService.getAllFiles(user, page, limit);
   }
 
   /**

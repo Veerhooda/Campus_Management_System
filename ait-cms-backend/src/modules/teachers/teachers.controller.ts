@@ -44,8 +44,14 @@ export class TeachersController {
     return this.teachersService.findByUserId(userId);
   }
 
+  @Get('my-subjects')
+  @Roles(Role.TEACHER)
+  async getMySubjects(@CurrentUser('id') userId: string) {
+    return this.teachersService.getMySubjects(userId);
+  }
+
   @Get('department/:departmentId')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.TEACHER)
   async findByDepartment(
     @Param('departmentId', ParseUUIDPipe) departmentId: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,

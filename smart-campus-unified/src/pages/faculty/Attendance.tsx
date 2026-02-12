@@ -143,14 +143,12 @@ const AttendanceMarking: React.FC = () => {
 
     try {
       setSubmitting(true);
-      await attendanceService.markBulkAttendance(
-        markedStudents.map(s => ({
-          studentId: s.student.id,
-          timetableSlotId: selectedSlot.id,
-          date: today,
-          status: s.status === 'PRESENT' || s.status === 'LATE' ? 'PRESENT' : 'ABSENT',
-        }))
-      );
+      const attendanceData = markedStudents.map(s => ({
+        studentId: s.student.id,
+        present: s.status === 'PRESENT' || s.status === 'LATE',
+      }));
+      
+      await attendanceService.markBulkAttendance(selectedSlot.id, today, attendanceData);
       setSuccessMessage('Attendance submitted successfully!');
       setHasUnsavedChanges(0);
       setTimeout(() => setSuccessMessage(''), 3000);

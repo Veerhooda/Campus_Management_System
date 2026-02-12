@@ -3,168 +3,115 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 
-// Create PostgreSQL connection pool for Prisma 7
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/ait_cms';
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 
 const prisma = new PrismaClient({ adapter });
 
+const BRANCHES = [
+  { name: 'Computer Engineering', code: 'COMP' },
+  { name: 'Information Technology', code: 'IT' },
+  { name: 'Electronics & Telecommunication', code: 'ENTC' },
+  { name: 'Mechanical Engineering', code: 'MECH' },
+  { name: 'Automation & Robotics', code: 'ARE' },
+];
+
+const SECTIONS = ['A', 'B'];
+const YEARS = [1, 2, 3, 4];
+
 async function main() {
   console.log('🌱 Starting database seed...');
-
-  // Hash password
   const passwordHash = await bcrypt.hash('password123', 12);
 
-  // Create Departments
+  // 1. Create Departments
   console.log('Creating departments...');
-  const csDept = await prisma.department.upsert({
-    where: { code: 'CSE' },
-    update: {},
-    create: {
-      name: 'Computer Science & Engineering',
-      code: 'CSE',
-    },
-  });
+  const deptMap = new Map();
+  
+  for (const branch of BRANCHES) {
+    const dept = await prisma.department.upsert({
+      where: { code: branch.code },
+      update: {},
+      create: { name: branch.name, code: branch.code },
+    });
+    deptMap.set(branch.code, dept.id);
+  }
 
-  const eceDept = await prisma.department.upsert({
-    where: { code: 'ECE' },
-    update: {},
-    create: {
-      name: 'Electronics & Communication Engineering',
-      code: 'ECE',
-    },
-  });
-
-  const mechDept = await prisma.department.upsert({
-    where: { code: 'ME' },
-    update: {},
-    create: {
-      name: 'Mechanical Engineering',
-      code: 'ME',
-    },
-  });
-
-  // Create Rooms
+  // 2. Create Rooms
   console.log('Creating rooms...');
-  const room101 = await prisma.room.upsert({
-    where: { name: 'LH-101' },
-    update: {},
-    create: {
-      name: 'LH-101',
-      building: 'Main Block',
-      capacity: 60,
-      hasProjector: true,
-    },
-  });
+  const rooms = [
+    { name: 'LH-101', building: 'Main Block', capacity: 60 },
+    { name: 'LH-102', building: 'Main Block', capacity: 60 },
+    { name: 'LAB-IT-1', building: 'IT Block', capacity: 40 },
+    { name: 'LAB-COMP-1', building: 'Comp Block', capacity: 40 },
+    { name: 'AUDITORIUM', building: 'Central Block', capacity: 500 },
+  ];
 
-  const room102 = await prisma.room.upsert({
-    where: { name: 'LH-102' },
-    update: {},
-    create: {
-      name: 'LH-102',
-      building: 'Main Block',
-      capacity: 60,
-      hasProjector: true,
-    },
-  });
+  for (const r of rooms) {
+    await prisma.room.upsert({
+      where: { name: r.name },
+      update: {},
+      create: { ...r, hasProjector: true },
+    });
+  }
 
-  const lab1 = await prisma.room.upsert({
-    where: { name: 'LAB-CS-1' },
-    update: {},
-    create: {
-      name: 'LAB-CS-1',
-      building: 'CS Block',
-      capacity: 40,
-      hasProjector: true,
-    },
-  });
-
-  const auditorium = await prisma.room.upsert({
-    where: { name: 'AUDITORIUM' },
-    update: {},
-    create: {
-      name: 'AUDITORIUM',
-      building: 'Central Block',
-      capacity: 500,
-      hasProjector: true,
-    },
-  });
-
-  // Create Classes
+  // 3. Create Classes (5 Branches * 4 Years * 2 Sections = 40 classes)
   console.log('Creating classes...');
-  const cse3a = await prisma.class.upsert({
-    where: {
-      departmentId_year_section: {
-        departmentId: csDept.id,
-        year: 3,
-        section: 'A',
-      },
-    },
-    update: {},
-    create: {
-      name: 'CSE-3A',
-      year: 3,
-      section: 'A',
-      departmentId: csDept.id,
-    },
-  });
+  for (const branch of BRANCHES) {
+    const deptId = deptMap.get(branch.code);
+    for (const year of YEARS) {
+      for (const section of SECTIONS) {
+        // e.g., COMP-SE-A (using simple naming: COMP-1A, COMP-2A, etc. or just numeric year)
+        // Let's use: COMP-YEAR-SECTION (e.g. COMP-2-A)
+        const className = `${branch.code}-${year}-${section}`;
+        await prisma.class.upsert({
+          where: {
+            departmentId_year_section: { departmentId: deptId, year, section },
+          },
+          update: {},
+          create: {
+            name: className,
+            year,
+            section,
+            departmentId: deptId,
+          },
+        });
+      }
+    }
+  }
 
-  const cse3b = await prisma.class.upsert({
-    where: {
-      departmentId_year_section: {
-        departmentId: csDept.id,
-        year: 3,
-        section: 'B',
-      },
-    },
-    update: {},
-    create: {
-      name: 'CSE-3B',
-      year: 3,
-      section: 'B',
-      departmentId: csDept.id,
-    },
-  });
-
-  // Create Subjects
+  // 4. Create Subjects
   console.log('Creating subjects...');
-  const dsa = await prisma.subject.upsert({
-    where: { code: 'CS301' },
-    update: {},
-    create: {
-      name: 'Data Structures & Algorithms',
-      code: 'CS301',
-      credits: 4,
-      departmentId: csDept.id,
-    },
-  });
+  const itDeptId = deptMap.get('IT');
+  const subjects = [
+    { name: 'Object Oriented Programming', code: 'OOP', credit: 4, deptId: itDeptId },
+    { name: 'Digital Transformation & Innovation', code: 'DTI', credit: 3, deptId: itDeptId },
+    { name: 'Engineering Skills & Practices', code: 'ESP', credit: 2, deptId: itDeptId },
+    { name: 'Constitution of India', code: 'COI', credit: 1, deptId: itDeptId },
+    { name: 'Engineering Mathematics-2', code: 'EM2', credit: 4, deptId: itDeptId }, // Usually generic, assigning to IT for now or create generic dept
+    { name: 'Advanced Software Engineering-2', code: 'ASE2', credit: 4, deptId: itDeptId },
+    { name: 'Basic Electrical & Electronics', code: 'BEEE', credit: 3, deptId: itDeptId },
+    { name: 'Basic Electronics Engineering', code: 'BXE', credit: 3, deptId: itDeptId },
+  ];
 
-  const dbms = await prisma.subject.upsert({
-    where: { code: 'CS302' },
-    update: {},
-    create: {
-      name: 'Database Management Systems',
-      code: 'CS302',
-      credits: 4,
-      departmentId: csDept.id,
-    },
-  });
+  const subjectMap = new Map();
+  for (const sub of subjects) {
+    const s = await prisma.subject.upsert({
+      where: { code: sub.code },
+      update: {},
+      create: {
+        name: sub.name,
+        code: sub.code,
+        credits: sub.credit,
+        departmentId: sub.deptId,
+      },
+    });
+    subjectMap.set(sub.code, s.id);
+  }
 
-  const os = await prisma.subject.upsert({
-    where: { code: 'CS303' },
-    update: {},
-    create: {
-      name: 'Operating Systems',
-      code: 'CS303',
-      credits: 3,
-      departmentId: csDept.id,
-    },
-  });
-
-  // Create Admin User
-  console.log('Creating admin user...');
-  const adminUser = await prisma.user.upsert({
+  // 5. Create Users (Admin)
+  console.log('Creating admin...');
+  await prisma.user.upsert({
     where: { email: 'admin@ait.edu' },
     update: {},
     create: {
@@ -172,198 +119,72 @@ async function main() {
       passwordHash,
       firstName: 'System',
       lastName: 'Admin',
-      phone: '+91-9876543210',
-      roles: {
-        create: [{ role: Role.ADMIN }],
-      },
-      adminProfile: {
-        create: {},
-      },
+      roles: { create: [{ role: Role.ADMIN }] },
+      adminProfile: { create: {} },
     },
   });
-  console.log(`  ✓ Admin: admin@ait.edu / password123`);
 
-  // Create Teacher User
-  console.log('Creating teacher user...');
-  const teacherUser = await prisma.user.upsert({
-    where: { email: 'faculty@ait.edu' },
-    update: {},
-    create: {
-      email: 'faculty@ait.edu',
-      passwordHash,
-      firstName: 'Dr. Rahul',
-      lastName: 'Sharma',
-      phone: '+91-9876543211',
-      roles: {
-        create: [{ role: Role.TEACHER }],
-      },
-      teacherProfile: {
-        create: {
-          employeeId: 'EMP001',
-          departmentId: csDept.id,
-        },
-      },
-    },
-    include: {
-      teacherProfile: true,
-    },
-  });
-  console.log(`  ✓ Teacher: faculty@ait.edu / password123`);
+  // 6. Create Teachers (IT Department)
+  console.log('Creating IT faculty...');
+  const facultyList = [
+    { first: 'Snehal', last: 'More', email: 'smore@ait.edu', empId: 'IT001' },
+    { first: 'Monali', last: 'Bachhav', email: 'mbachhav@ait.edu', empId: 'IT002' },
+    { first: 'Snehal', last: 'Shinde', email: 'sshinde@ait.edu', empId: 'IT003' },
+    { first: 'Sachin', last: 'Tanwade', email: 'stanwade@ait.edu', empId: 'IT004' },
+    { first: 'Sachin', last: 'Gaikwad', email: 'sgaikwad@ait.edu', empId: 'IT005' },
+  ];
 
-  // Create Student User
-  console.log('Creating student user...');
-  const studentUser = await prisma.user.upsert({
-    where: { email: 'student@ait.edu' },
-    update: {},
-    create: {
-      email: 'student@ait.edu',
-      passwordHash,
-      firstName: 'Amit',
-      lastName: 'Kumar',
-      phone: '+91-9876543212',
-      roles: {
-        create: [{ role: Role.STUDENT }],
-      },
-      studentProfile: {
-        create: {
-          rollNumber: 'CSE2021001',
-          enrollmentYear: 2021,
-          classId: cse3a.id,
-        },
-      },
-    },
-    include: {
-      studentProfile: true,
-    },
-  });
-  console.log(`  ✓ Student: student@ait.edu / password123`);
-
-  // Create Organizer User
-  console.log('Creating organizer user...');
-  const organizerUser = await prisma.user.upsert({
-    where: { email: 'organizer@ait.edu' },
-    update: {},
-    create: {
-      email: 'organizer@ait.edu',
-      passwordHash,
-      firstName: 'Priya',
-      lastName: 'Patel',
-      phone: '+91-9876543213',
-      roles: {
-        create: [{ role: Role.ORGANIZER }],
-      },
-      organizerProfile: {
-        create: {},
-      },
-    },
-    include: {
-      organizerProfile: true,
-    },
-  });
-  console.log(`  ✓ Organizer: organizer@ait.edu / password123`);
-
-  // Create additional students
-  console.log('Creating additional students...');
-  for (let i = 2; i <= 5; i++) {
+  for (const f of facultyList) {
     await prisma.user.upsert({
-      where: { email: `student${i}@ait.edu` },
+      where: { email: f.email },
       update: {},
       create: {
-        email: `student${i}@ait.edu`,
+        email: f.email,
         passwordHash,
-        firstName: `Student`,
-        lastName: `${i}`,
-        roles: {
-          create: [{ role: Role.STUDENT }],
-        },
-        studentProfile: {
+        firstName: f.first,
+        lastName: f.last,
+        roles: { create: [{ role: Role.TEACHER }] },
+        teacherProfile: {
           create: {
-            rollNumber: `CSE202100${i}`,
-            enrollmentYear: 2021,
-            classId: cse3a.id,
+            employeeId: f.empId,
+            departmentId: itDeptId,
           },
         },
       },
     });
   }
-  console.log(`  ✓ Created 4 additional students`);
 
-  // Create Timetable Slots (if teacher profile exists)
-  if (teacherUser.teacherProfile) {
-    console.log('Creating timetable slots...');
-    
-    // Monday DSA
-    await prisma.timetableSlot.upsert({
-      where: {
-        dayOfWeek_startTime_classId: {
-          dayOfWeek: DayOfWeek.MONDAY,
-          startTime: '09:00',
-          classId: cse3a.id,
+  // 7. Create Demo Student (IT, Year 2, Section A)
+  console.log('Creating demo student...');
+  const it2aClass = await prisma.class.findFirstOrThrow({
+    where: { departmentId: itDeptId, year: 2, section: 'A' },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'student@ait.edu' },
+    update: {
+      studentProfile: {
+        update: { registrationNumber: 'IT2024001' }
+      }
+    },
+    create: {
+      email: 'student@ait.edu',
+      passwordHash,
+      firstName: 'Amit',
+      lastName: 'Kumar',
+      roles: { create: [{ role: Role.STUDENT }] },
+      studentProfile: {
+        create: {
+          rollNumber: '3001',
+          registrationNumber: 'IT2024001', // New field
+          enrollmentYear: 2024,
+          classId: it2aClass.id,
         },
       },
-      update: {},
-      create: {
-        dayOfWeek: DayOfWeek.MONDAY,
-        startTime: '09:00',
-        endTime: '10:00',
-        classId: cse3a.id,
-        subjectId: dsa.id,
-        teacherId: teacherUser.teacherProfile.id,
-        roomId: room101.id,
-      },
-    });
-
-    // Monday DBMS
-    await prisma.timetableSlot.upsert({
-      where: {
-        dayOfWeek_startTime_classId: {
-          dayOfWeek: DayOfWeek.MONDAY,
-          startTime: '10:00',
-          classId: cse3a.id,
-        },
-      },
-      update: {},
-      create: {
-        dayOfWeek: DayOfWeek.MONDAY,
-        startTime: '10:00',
-        endTime: '11:00',
-        classId: cse3a.id,
-        subjectId: dbms.id,
-        teacherId: teacherUser.teacherProfile.id,
-        roomId: room101.id,
-      },
-    });
-
-    // Tuesday OS
-    await prisma.timetableSlot.upsert({
-      where: {
-        dayOfWeek_startTime_classId: {
-          dayOfWeek: DayOfWeek.TUESDAY,
-          startTime: '09:00',
-          classId: cse3a.id,
-        },
-      },
-      update: {},
-      create: {
-        dayOfWeek: DayOfWeek.TUESDAY,
-        startTime: '09:00',
-        endTime: '10:00',
-        classId: cse3a.id,
-        subjectId: os.id,
-        teacherId: teacherUser.teacherProfile.id,
-        roomId: room101.id,
-      },
-    });
-
-    console.log(`  ✓ Created 3 timetable slots`);
-  }
+    },
+  });
 
   console.log('\n✅ Database seed completed successfully!');
-  console.log('\n📝 Test Credentials:');
-  console.log('   Admin:     admin@ait.edu / password123');
-  console.log('   Teacher:   faculty@ait.edu / password123');
-  console.log('   Student:   student@ait.edu / password123');
-  console.log('   Organizer: organizer@ait.edu / password123');
 }
 
 main()

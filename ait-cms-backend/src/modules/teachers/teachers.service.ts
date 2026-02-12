@@ -108,6 +108,23 @@ export class TeachersService {
     return teacher;
   }
 
+  async getMySubjects(userId: string) {
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { userId },
+    });
+
+    if (!teacher) {
+      throw new NotFoundException('Teacher profile not found');
+    }
+
+    const subjects = await this.prisma.subject.findMany({
+      where: { departmentId: teacher.departmentId },
+      orderBy: { name: 'asc' },
+    });
+
+    return subjects;
+  }
+
   async findByDepartment(departmentId: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
 

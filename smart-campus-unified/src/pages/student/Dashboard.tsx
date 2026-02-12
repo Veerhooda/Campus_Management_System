@@ -123,6 +123,14 @@ const StudentDashboard: React.FC = () => {
           {getGreeting()}, {firstName} 👋
         </h1>
         <p className="text-slate-500 dark:text-slate-400">Here's what's happening on campus today.</p>
+        
+        {user?.studentProfile?.registrationNumber && (
+          <div className="mt-1">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+              ID: {user.studentProfile.registrationNumber}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
