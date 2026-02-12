@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { Role, EventStatus } from '@prisma/client';
 import { EventsService } from './events.service';
-import { CreateEventDto, UpdateEventDto } from './dto';
+import { CreateEventDto, UpdateEventDto, CreateEventFeedbackDto } from './dto';
 import { Roles, CurrentUser } from '../../common/decorators';
 import { PrismaService } from '../../prisma';
 
@@ -58,6 +58,12 @@ export class EventsController {
   @Get('my-events')
   async getMyEvents(@CurrentUser('id') userId: string) {
     return this.eventsService.getMyEvents(userId);
+  }
+
+  @Get('my-registrations')
+  @Roles(Role.STUDENT)
+  async getMyRegistrations(@CurrentUser('id') userId: string) {
+    return this.eventsService.getMyRegistrations(userId);
   }
 
   @Get(':id')
@@ -106,5 +112,30 @@ export class EventsController {
   @Roles(Role.ADMIN)
   async delete(@Param('id', ParseUUIDPipe) id: string) {
     return this.eventsService.delete(id);
+  }
+
+  @Post(':id/feedback')
+  @Roles(Role.STUDENT)
+  async submitFeedback(
+    @Param('id', ParseUUIDPipe) eventId: string,
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateEventFeedbackDto,
+  ) {
+    return this.eventsService.submitFeedback(eventId, userId, dto);
+  }
+
+  @Get(':id/feedback')
+  @Roles(Role.ORGANIZER, Role.ADMIN)
+  async getFeedback(@Param('id', ParseUUIDPipe) eventId: string) {
+    return this.eventsService.getFeedback(eventId);
+  }
+
+  @Post(':id/attendance/:userId')
+  @Roles(Role.ORGANIZER, Role.ADMIN)
+  async markAttendance(
+    @Param('id', ParseUUIDPipe) eventId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ) {
+    return this.eventsService.markAttendance(eventId, userId);
   }
 }

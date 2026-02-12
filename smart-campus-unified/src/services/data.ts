@@ -221,12 +221,17 @@ export const eventService = {
     return response.data.data;
   },
 
+  getMyRegistrations: async (): Promise<(CampusEvent & { attended: boolean })[]> => {
+    const response = await api.get<ApiResponse<(CampusEvent & { attended: boolean })[]>>('/events/my-registrations');
+    return response.data.data;
+  },
+
   getUpcoming: async (page = 1, limit = 20): Promise<PaginatedResponse<CampusEvent>> => {
     const response = await api.get<ApiResponse<PaginatedResponse<CampusEvent>>>('/events/upcoming', { params: { page, limit } });
     return response.data.data;
   },
 
-  createEvent: async (data: { title: string; description?: string; startDate: string; endDate: string; venue?: string; maxParticipants?: number }): Promise<CampusEvent> => {
+  createEvent: async (data: { title: string; description?: string; startDate: string; endDate: string; venue?: string; maxParticipants?: number; posterUrl?: string; themeColor?: string; isFeedbackEnabled?: boolean }): Promise<CampusEvent> => {
     const response = await api.post<ApiResponse<CampusEvent>>('/events', data);
     return response.data.data;
   },
@@ -252,6 +257,11 @@ export const eventService = {
 
   unregister: async (eventId: string): Promise<void> => {
     await api.delete(`/events/${eventId}/register`);
+  },
+
+  getFeedback: async (eventId: string): Promise<{ averageRating: number; reviews: any[] }> => {
+    const response = await api.get<ApiResponse<{ averageRating: number; reviews: any[] }>>(`/events/${eventId}/feedback`);
+    return response.data.data;
   },
 };
 

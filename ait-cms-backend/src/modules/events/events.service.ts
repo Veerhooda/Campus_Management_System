@@ -35,6 +35,9 @@ export class EventsService {
         endDateTime,
         maxCapacity: dto.maxParticipants,
         roomId: dto.roomId,
+        posterUrl: dto.posterUrl,
+        themeColor: dto.themeColor,
+        isFeedbackEnabled: dto.isFeedbackEnabled ?? false,
         organizerId,
       },
       include: {
@@ -140,6 +143,8 @@ export class EventsService {
     delete updateData.startDate;
     delete updateData.endDate;
     delete updateData.maxParticipants;
+    // These are valid schema fields, no need to delete if they exist in DTO and schema match
+    // posterUrl, themeColor, isFeedbackEnabled map directly
 
     const updated = await this.prisma.event.update({
       where: { id },
@@ -238,5 +243,124 @@ export class EventsService {
 
     this.logger.log(`Event deleted: ${id}`);
     return { message: 'Event deleted successfully' };
+  }
+
+  async getMyRegistrations(userId: string) {
+    const registrations = await this.prisma.eventRegistration.findMany({
+      where: { userId },
+      include: {
+        event: {
+          include: {
+            organizer: {
+              include: {
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+            room: true,
+          },
+        },
+      },
+      orderBy: { event: { startDateTime: 'asc' } },
+    });
+
+    return registrations.map(r => ({
+      ...r.event,
+      attended: r.attended,
+      registrationId: r.id,
+    }));
+  }
+
+  async submitFeedback(eventId: string, userId: string, dto: any) {
+    const studentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { studentProfile: true },
+    });
+
+    if (!studentUser?.studentProfile) {
+      throw new BadRequestException('Only students can submit feedback');
+    }
+
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: { registrations: true },
+    });
+
+    if (!event) throw new NotFoundException('Event not found');
+
+    if (!event.isFeedbackEnabled) {
+      throw new BadRequestException('Feedback is not enabled for this event');
+    }
+
+    // Check if attended
+    const registration = event.registrations.find(r => r.userId === userId);
+    
+    // Strict check 'attended' flag.
+    if (!registration?.attended) {
+      throw new BadRequestException('You must have attended the event to submit feedback');
+    }
+
+    // Check if already submitted
+    const existing = await this.prisma.eventFeedback.findUnique({
+      where: {
+        eventId_studentId: {
+          eventId,
+          studentId: studentUser.studentProfile.id,
+        },
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException('Feedback already submitted');
+    }
+
+    return this.prisma.eventFeedback.create({
+      data: {
+        eventId,
+        studentId: studentUser.studentProfile.id,
+        rating: dto.rating,
+        comment: dto.comment,
+      },
+    });
+  }
+
+  async getFeedback(eventId: string) {
+    const feedback = await this.prisma.eventFeedback.findMany({
+      where: { eventId },
+      include: {
+        student: {
+          include: {
+            user: { select: { firstName: true, lastName: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const averageRating = feedback.reduce((acc, curr) => acc + curr.rating, 0) / (feedback.length || 1);
+
+    return {
+      averageRating: Number(averageRating.toFixed(1)),
+      totalReviews: feedback.length,
+      reviews: feedback,
+    };
+  }
+
+  async markAttendance(eventId: string, userId: string) {
+    // This method is for organizer to mark a student as attended
+    const registration = await this.prisma.eventRegistration.findUnique({
+      where: { userId_eventId: { userId, eventId } }
+    });
+    
+    if (!registration) throw new NotFoundException('User not registered');
+    
+    return this.prisma.eventRegistration.update({
+      where: { id: registration.id },
+      data: { attended: true }
+    });
   }
 }

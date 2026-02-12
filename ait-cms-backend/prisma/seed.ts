@@ -152,7 +152,30 @@ async function main() {
       },
     });
   }
-
+  // 7. Create Organizer
+  console.log('Creating organizer...');
+  await prisma.user.upsert({
+    where: { email: 'organizer@ait.edu' },
+    update: {},
+    create: {
+      email: 'organizer@ait.edu',
+      passwordHash,
+      firstName: 'Event',
+      lastName: 'Organizer',
+      roles: { create: [{ role: Role.ORGANIZER }] },
+      organizerProfile: {
+        create: {
+          club: {
+            create: {
+              name: 'AIT Cultural Club',
+              description: 'Official Cultural Club of AIT Pune',
+              themeColor: '#ec4899',
+            },
+          },
+        },
+      },
+    },
+  });
   // 7. Create Demo Students (IT, Years 1-4, Section A)
   console.log('Creating demo students for all years...');
   

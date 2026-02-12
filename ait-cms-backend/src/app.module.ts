@@ -18,6 +18,7 @@ import { MaintenanceModule } from './modules/maintenance';
 import { FilesModule } from './modules/files';
 import { NotificationsModule } from './modules/notifications';
 import { RolesGuard } from './common/guards';
+import { ClubsModule } from './modules/clubs/clubs.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { RolesGuard } from './common/guards';
     MaintenanceModule,
     FilesModule,
     NotificationsModule,
+    ClubsModule,
   ],
   controllers: [],
   providers: [

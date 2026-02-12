@@ -65,6 +65,28 @@ const OrganizerDashboard: React.FC = () => {
     fetchEvents();
   }, []);
 
+  // Feedback Data
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackData, setFeedbackData] = useState<{ averageRating: number; reviews: any[] } | null>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+
+  const handleCreateEvent = () => navigate('/organizer/events');
+
+  const handleViewFeedback = async (eventId: string) => {
+    try {
+      setFeedbackLoading(true);
+      setShowFeedbackModal(true);
+      const data = await eventService.getFeedback(eventId);
+      setFeedbackData(data);
+    } catch (error) {
+      console.error('Failed to load feedback:', error);
+      alert('Failed to load feedback');
+      setShowFeedbackModal(false);
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
+
   const handleGenerateAiSuggestions = async () => {
     setIsLoadingAi(true);
     // Simulate AI response
@@ -197,6 +219,14 @@ const OrganizerDashboard: React.FC = () => {
                         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getStatusColor(event.status)}`}>
                           {getStatusLabel(event.status)}
                         </span>
+                        {(event.status === 'COMPLETED' || event.isFeedbackEnabled) && (
+                           <button 
+                             onClick={(e) => { e.stopPropagation(); handleViewFeedback(event.id); }} 
+                             className="ml-2 text-xs text-primary hover:text-blue-700 font-semibold hover:underline"
+                           >
+                             View Feedback
+                           </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -263,6 +293,71 @@ const OrganizerDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-surface-dark rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+             {/* Modal Header */}
+             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Event Feedback</h2>
+                <button onClick={() => setShowFeedbackModal(false)} className="text-slate-400 hover:text-slate-600">
+                   <span className="material-symbols-outlined">close</span>
+                </button>
+             </div>
+             
+             {/* Modal Body */}
+             <div className="p-6 overflow-y-auto">
+                {feedbackLoading ? (
+                   <div className="flex flex-col items-center py-12">
+                       <span className="material-symbols-outlined animate-spin text-4xl text-primary mb-2">autorenew</span>
+                       <p className="text-slate-500">Loading feedback...</p>
+                   </div>
+                ) : !feedbackData || feedbackData.reviews.length === 0 ? (
+                   <div className="text-center py-12">
+                       <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">reviews</span>
+                       <p className="text-slate-500">No feedback received for this event yet.</p>
+                   </div>
+                ) : (
+                   <div className="space-y-6">
+                      {/* Score Summary */}
+                      <div className="flex items-center gap-4 p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                         <div className="text-4xl font-black text-yellow-600 dark:text-yellow-500">
+                            {feedbackData.averageRating.toFixed(1)}
+                         </div>
+                         <div>
+                            <div className="flex text-yellow-500 text-lg">
+                               {'★'.repeat(Math.round(feedbackData.averageRating))}{'☆'.repeat(5 - Math.round(feedbackData.averageRating))}
+                            </div>
+                            <p className="text-sm text-yellow-700 dark:text-yellow-400 font-medium">Average Rating from {feedbackData.reviews.length} students</p>
+                         </div>
+                      </div>
+
+                      {/* Review List */}
+                      <div className="space-y-4">
+                         <h3 className="font-bold text-slate-900 dark:text-white">Recent Reviews</h3>
+                         {feedbackData.reviews.map((review: any) => (
+                            <div key={review.id} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                               <div className="flex justify-between mb-2">
+                                  <span className="font-bold text-sm text-slate-900 dark:text-white">Student</span>
+                                  <div className="flex text-yellow-500 text-xs">
+                                     {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                                  </div>
+                               </div>
+                               {review.comment ? (
+                                   <p className="text-sm text-slate-600 dark:text-slate-300">"{review.comment}"</p>
+                               ) : (
+                                  <p className="text-xs italic text-slate-400">No comment provided.</p>
+                               )}
+                               <p className="text-xs text-slate-400 mt-2">{new Date(review.createdAt).toLocaleDateString()}</p>
+                            </div>
+                         ))}
+                      </div>
+                   </div>
+                )}
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

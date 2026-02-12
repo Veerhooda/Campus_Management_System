@@ -20,15 +20,19 @@ import FacultyBroadcast from './pages/faculty/Broadcast';
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
 import GrievanceManagement from './pages/admin/Grievances';
+
 import OrganizerDashboard from './pages/admin/OrganizerDashboard';
+import ClubSettings from './pages/organizer/ClubSettings';
 import UserManagement from './pages/admin/UserManagement';
 import Broadcast from './pages/admin/Broadcast';
 import TimetableManagement from './pages/admin/TimetableManagement';
+import AdminClubs from './pages/admin/AdminClubs';
 
 // Student Feature Pages
 import StudentGrievances from './pages/student/Grievances';
 import MaintenanceRequests from './pages/student/MaintenanceRequests';
 import StudentNotes from './pages/student/Notes';
+import StudentEvents from './pages/student/Events';
 
 // Shared Pages
 import Notifications from './pages/shared/Notifications';
@@ -138,6 +142,12 @@ const App: React.FC = () => {
           </ProtectedRoute>
         } />
 
+        <Route path="/student/events" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentEvents />
+          </ProtectedRoute>
+        } />
+
         {/* Faculty/Teacher Routes */}
         <Route path="/faculty/dashboard" element={
           <ProtectedRoute allowedRoles={['TEACHER']}>
@@ -211,6 +221,11 @@ const App: React.FC = () => {
             <TimetableManagement />
           </ProtectedRoute>
         } />
+        <Route path="/admin/clubs" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminClubs />
+          </ProtectedRoute>
+        } />
 
         {/* Organizer Routes */}
         <Route path="/organizer/dashboard" element={
@@ -226,6 +241,11 @@ const App: React.FC = () => {
         <Route path="/organizer/notifications" element={
           <ProtectedRoute allowedRoles={['ORGANIZER']}>
             <Notifications />
+          </ProtectedRoute>
+        } />
+        <Route path="/organizer/club" element={
+          <ProtectedRoute allowedRoles={['ORGANIZER']}>
+            <ClubSettings />
           </ProtectedRoute>
         } />
       </Route>

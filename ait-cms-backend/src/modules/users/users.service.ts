@@ -108,7 +108,16 @@ export class UsersService {
           // Initialize empty profiles for others if needed
           adminProfile: roles.includes(Role.ADMIN) ? { create: {} } : undefined,
           organizerProfile: roles.includes(Role.ORGANIZER)
-            ? { create: {} }
+            ? {
+                create: {
+                  club: {
+                    create: {
+                      name: `${firstName}'s Club`,
+                      description: 'New Club',
+                    },
+                  },
+                },
+              }
             : undefined,
         },
         include: {

@@ -19,6 +19,7 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
   const studentItems: NavItem[] = [
     { icon: 'grid_view', label: 'Dashboard', path: '/student/dashboard' },
     { icon: 'calendar_month', label: 'Schedule', path: '/student/schedule' },
+    { icon: 'event', label: 'Events', path: '/student/events' },
     { icon: 'library_books', label: 'Notes', path: '/student/notes' },
     { icon: 'support_agent', label: 'Grievances', path: '/student/grievances' },
     { icon: 'build', label: 'Maintenance', path: '/student/maintenance' },
@@ -38,7 +39,8 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
     { icon: 'grid_view', label: 'Dashboard', path: '/admin/dashboard' },
     { icon: 'people', label: 'User Management', path: '/admin/users' },
     { icon: 'campaign', label: 'Broadcast', path: '/admin/broadcast' },
-    { icon: 'calendar_month', label: 'Timetable', path: '/admin/timetable' },
+    { icon: 'calendar_month', label: 'Timetable', path: '/admin/timetable', roles: ['ADMIN'] },
+    { icon: 'groups', label: 'Clubs', path: '/admin/clubs', roles: ['ADMIN'] },
     { icon: 'event', label: 'Events', path: '/admin/events' },
     { icon: 'support_agent', label: 'Grievances', path: '/admin/grievances' },
     { icon: 'celebration', label: 'Organizer Portal', path: '/admin/organizer' },
@@ -48,6 +50,7 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
   const organizerItems: NavItem[] = [
     { icon: 'grid_view', label: 'Dashboard', path: '/organizer/dashboard' },
     { icon: 'event', label: 'Events', path: '/organizer/events' },
+    { icon: 'settings', label: 'Club Settings', path: '/organizer/club' },
     ...commonItems,
   ];
 

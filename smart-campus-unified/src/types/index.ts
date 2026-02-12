@@ -81,6 +81,9 @@ export interface CampusEvent {
   status: EventStatus;
   maxCapacity?: number;
   organizerId: string;
+  posterUrl?: string;
+  themeColor?: string;
+  isFeedbackEnabled?: boolean;
 }
 
 export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED';

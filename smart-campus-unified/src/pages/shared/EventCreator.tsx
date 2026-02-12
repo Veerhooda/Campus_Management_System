@@ -15,6 +15,9 @@ interface EventData {
   venue: string;
   maxParticipants: number | undefined;
   audience: string[];
+  posterUrl: string;
+  themeColor: string;
+  isFeedbackEnabled: boolean;
 }
 
 const EventCreator: React.FC = () => {
@@ -30,6 +33,9 @@ const EventCreator: React.FC = () => {
     venue: '',
     maxParticipants: undefined,
     audience: ['All Students'],
+    posterUrl: '',
+    themeColor: '#6366f1',
+    isFeedbackEnabled: false,
   });
 
   const updateField = <K extends keyof EventData>(field: K, value: EventData[K]) => {
@@ -65,13 +71,16 @@ const EventCreator: React.FC = () => {
       setError(null);
 
       // Create the event
-      const event = await eventService.createEvent({
+        const event = await eventService.createEvent({
         title: formData.title,
         description: formData.description || undefined,
         startDate: new Date(formData.startDate).toISOString(),
         endDate: new Date(formData.endDate).toISOString(),
         venue: formData.venue || undefined,
         maxParticipants: formData.maxParticipants,
+        posterUrl: formData.posterUrl || undefined,
+        themeColor: formData.themeColor || undefined,
+        isFeedbackEnabled: formData.isFeedbackEnabled,
       });
 
       // Publish if requested
@@ -255,6 +264,52 @@ const EventCreator: React.FC = () => {
                       }
                     }}
                   />
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-slate-200 dark:border-slate-700">
+                <h4 className="text-md font-bold mb-4 text-slate-900 dark:text-white">Visuals & Feedback</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-slate-900 dark:text-white">Poster URL</label>
+                    <input 
+                      className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                      placeholder="https://..."
+                      value={formData.posterUrl || ''}
+                      onChange={(e) => updateField('posterUrl', e.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-slate-900 dark:text-white">Theme Color</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="color"
+                        value={formData.themeColor || '#6366f1'}
+                        onChange={(e) => updateField('themeColor', e.target.value)}
+                        className="h-12 w-12 p-0 border-0 rounded cursor-pointer"
+                      />
+                      <input 
+                        className="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                        value={formData.themeColor || '#6366f1'}
+                        onChange={(e) => updateField('themeColor', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-surface-dark">
+                  <input 
+                    type="checkbox"
+                    id="feedback-toggle"
+                    checked={formData.isFeedbackEnabled}
+                    onChange={(e) => updateField('isFeedbackEnabled', e.target.checked)}
+                    className="w-5 h-5 text-primary rounded focus:ring-primary"
+                  />
+                  <div>
+                    <label htmlFor="feedback-toggle" className="font-semibold text-slate-900 dark:text-white block cursor-pointer">Enable Feedback Collection</label>
+                    <p className="text-xs text-slate-500">Allow students to rate and review this event after it ends.</p>
+                  </div>
                 </div>
               </div>
             </div>

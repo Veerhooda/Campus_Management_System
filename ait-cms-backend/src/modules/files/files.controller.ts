@@ -28,7 +28,7 @@ export class FilesController {
    * Upload a file (Teacher only)
    */
   @Post('upload')
-  @Roles(Role.TEACHER)
+  @Roles(Role.TEACHER, Role.ORGANIZER, Role.ADMIN)
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max
@@ -70,7 +70,7 @@ export class FilesController {
    * Get my uploaded files (Teacher only)
    */
   @Get('my')
-  @Roles(Role.TEACHER)
+  @Roles(Role.TEACHER, Role.ORGANIZER, Role.ADMIN)
   async getMyFiles(
     @CurrentUser('id') userId: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
