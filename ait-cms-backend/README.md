@@ -291,11 +291,12 @@ curl -H "Authorization: Bearer <accessToken>" \
 <details>
 <summary><strong>📬 Notifications</strong></summary>
 
-| Method | Endpoint                      | Access | Description      |
-| ------ | ----------------------------- | ------ | ---------------- |
-| `GET`  | `/notifications`              | Auth   | My notifications |
-| `GET`  | `/notifications/unread-count` | Auth   | Unread count     |
-| `POST` | `/notifications/read-all`     | Auth   | Mark all read    |
+| Method | Endpoint                      | Access         | Description      |
+| ------ | ----------------------------- | -------------- | ---------------- |
+| `GET`  | `/notifications`              | Auth           | My notifications |
+| `GET`  | `/notifications/unread-count` | Auth           | Unread count     |
+| `POST` | `/notifications/read-all`     | Auth           | Mark all read    |
+| `POST` | `/notifications/bulk`         | Admin, Teacher | Send broadcast   |
 
 </details>
 

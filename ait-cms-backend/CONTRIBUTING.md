@@ -108,6 +108,8 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 - Use **dependency injection**
 - Keep controllers thin — business logic in services
 - Use **DTOs** with class-validator for input validation
+- Use **@Roles()** decorator for route protection (Admin, Teacher, Student)
+- Use **@CurrentUser()** decorator to access the logged-in user
 
 ### Formatting
 

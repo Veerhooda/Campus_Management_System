@@ -93,9 +93,11 @@
 
 ### 🔔 Communication
 
-- Real-time notifications with read/unread tracking
-- Bulk broadcast announcements to specific roles
-- File storage with local disk fallback (S3-compatible when configured)
+- **Real-time Notifications** — Instant alerts for updates, assignments, and events
+- **Smart Broadcasts**
+  - **Admin**: Target students by specific Department and Year (FE, SE, TE, BE)
+  - **Faculty**: Instant announcements to their own department's students and colleagues
+- **File Storage** — Secure local/S3 storage for notes and assignments
 
 ---
 

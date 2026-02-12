@@ -22,7 +22,7 @@
 | Portal           | Features                                                                        |
 | ---------------- | ------------------------------------------------------------------------------- |
 | 👨‍🎓 **Student**   | Dashboard, timetable, attendance stats, notes download, grievances, maintenance |
-| 👨‍🏫 **Faculty**   | Class schedule, attendance marking, notes upload, bulk operations               |
+| 👨‍🏫 **Faculty**   | Class schedule, attendance, notes upload, broadcasts                            |
 | 🔧 **Admin**     | System overview, user management, grievances, broadcast, events                 |
 | 🎯 **Organizer** | Event creation, calendar view, AI suggestions, publishing                       |
 
@@ -106,7 +106,8 @@ src/
 │   ├── faculty/             # Faculty-only pages
 │   │   ├── Dashboard.tsx    # Today's schedule
 │   │   ├── Attendance.tsx   # Bulk attendance marking
-│   │   └── NotesUpload.tsx  # Drag-drop file upload
+│   │   ├── NotesUpload.tsx  # Drag-drop file upload
+│   │   └── Broadcast.tsx    # Department announcements
 │   │
 │   ├── student/             # Student-only pages
 │   │   ├── Dashboard.tsx    # Classes, attendance stats
@@ -168,6 +169,7 @@ attendanceService.markBulkAttendance(); // Faculty bulk marking
 // Notifications
 notificationService.getNotifications(); // Paginated list
 notificationService.markAsRead(id); // Mark single as read
+notificationService.createBulk(data); // Send broadcast
 
 // Events
 eventService.getEvents(); // All events

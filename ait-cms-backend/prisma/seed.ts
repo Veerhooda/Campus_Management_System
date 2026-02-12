@@ -1,3 +1,4 @@
+
 import { PrismaClient, Role, DayOfWeek } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -61,8 +62,6 @@ async function main() {
     const deptId = deptMap.get(branch.code);
     for (const year of YEARS) {
       for (const section of SECTIONS) {
-        // e.g., COMP-SE-A (using simple naming: COMP-1A, COMP-2A, etc. or just numeric year)
-        // Let's use: COMP-YEAR-SECTION (e.g. COMP-2-A)
         const className = `${branch.code}-${year}-${section}`;
         await prisma.class.upsert({
           where: {
@@ -88,7 +87,7 @@ async function main() {
     { name: 'Digital Transformation & Innovation', code: 'DTI', credit: 3, deptId: itDeptId },
     { name: 'Engineering Skills & Practices', code: 'ESP', credit: 2, deptId: itDeptId },
     { name: 'Constitution of India', code: 'COI', credit: 1, deptId: itDeptId },
-    { name: 'Engineering Mathematics-2', code: 'EM2', credit: 4, deptId: itDeptId }, // Usually generic, assigning to IT for now or create generic dept
+    { name: 'Engineering Mathematics-2', code: 'EM2', credit: 4, deptId: itDeptId },
     { name: 'Advanced Software Engineering-2', code: 'ASE2', credit: 4, deptId: itDeptId },
     { name: 'Basic Electrical & Electronics', code: 'BEEE', credit: 3, deptId: itDeptId },
     { name: 'Basic Electronics Engineering', code: 'BXE', credit: 3, deptId: itDeptId },
@@ -154,35 +153,58 @@ async function main() {
     });
   }
 
-  // 7. Create Demo Student (IT, Year 2, Section A)
-  console.log('Creating demo student...');
-  const it2aClass = await prisma.class.findFirstOrThrow({
-    where: { departmentId: itDeptId, year: 2, section: 'A' },
-  });
+  // 7. Create Demo Students (IT, Years 1-4, Section A)
+  console.log('Creating demo students for all years...');
+  
+  const studentData = [
+    { year: 1, name: 'Rohan Sharma', firstName: 'Rohan', lastName: 'Sharma', regNo: 'IT2025001', roll: '1001' },
+    { year: 2, name: 'Amit Kumar', firstName: 'Amit', lastName: 'Kumar', regNo: 'IT2024001', roll: '2001' },
+    { year: 3, name: 'Priya Patel', firstName: 'Priya', lastName: 'Patel', regNo: 'IT2023001', roll: '3001' },
+    { year: 4, name: 'Vikram Singh', firstName: 'Vikram', lastName: 'Singh', regNo: 'IT2022001', roll: '4001' },
+  ];
 
-  await prisma.user.upsert({
-    where: { email: 'student@ait.edu' },
-    update: {
-      studentProfile: {
-        update: { registrationNumber: 'IT2024001' }
-      }
-    },
-    create: {
-      email: 'student@ait.edu',
-      passwordHash,
-      firstName: 'Amit',
-      lastName: 'Kumar',
-      roles: { create: [{ role: Role.STUDENT }] },
-      studentProfile: {
-        create: {
-          rollNumber: '3001',
-          registrationNumber: 'IT2024001', // New field
-          enrollmentYear: 2024,
-          classId: it2aClass.id,
+  const currentYear = new Date().getFullYear();
+
+  for (const s of studentData) {
+    const classInfo = await prisma.class.findFirst({
+      where: { departmentId: itDeptId, year: s.year, section: 'A' },
+    });
+    
+    if (classInfo) {
+      // Use existing email for Amit (Year 2) to avoid conflict or just update him
+      const email = s.year === 2 ? 'student@ait.edu' : `student${s.year}@ait.edu`;
+      
+      // Update or Create Logi
+      await prisma.user.upsert({
+        where: { email: email },
+        update: {
+          studentProfile: {
+            update: { 
+              rollNumber: s.roll,
+              registrationNumber: s.regNo,
+              classId: classInfo.id
+            }
+          }
         },
-      },
-    },
-  });
+        create: {
+          email: email,
+          passwordHash,
+          firstName: s.firstName,
+          lastName: s.lastName,
+          roles: { create: [{ role: Role.STUDENT }] },
+          studentProfile: {
+            create: {
+              rollNumber: s.roll,
+              registrationNumber: s.regNo,
+              enrollmentYear: currentYear - (s.year - 1),
+              classId: classInfo.id,
+            },
+          },
+        },
+      });
+      console.log(`Created student ${s.name} (${email}) in Year ${s.year}`);
+    }
+  }
 
   console.log('\n✅ Database seed completed successfully!');
 }
