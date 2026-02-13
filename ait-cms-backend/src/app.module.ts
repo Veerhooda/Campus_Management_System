@@ -19,6 +19,7 @@ import { FilesModule } from './modules/files';
 import { NotificationsModule } from './modules/notifications';
 import { RolesGuard } from './common/guards';
 import { ClubsModule } from './modules/clubs/clubs.module';
+import { CounsellingModule } from './modules/counselling/counselling.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { ClubsModule } from './modules/clubs/clubs.module';
     FilesModule,
     NotificationsModule,
     ClubsModule,
+    CounsellingModule,
   ],
   controllers: [],
   providers: [

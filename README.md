@@ -238,7 +238,7 @@ npm run dev
 | --------------------------------------------------------------- | ----------------------------------- |
 | [Backend README](./ait-cms-backend/README.md)                   | API documentation, endpoints, setup |
 | [Frontend README](./smart-campus-unified/README.md)             | Component structure, pages, styling |
-| [Contributing Guide](./ait-cms-backend/CONTRIBUTING.md)         | How to contribute                   |
+| [Contributing Guide](./CONTRIBUTING.md)                         | How to contribute                   |
 | [API Endpoints](./ait-cms-backend/README.md#-api-documentation) | Complete API reference              |
 
 ---
@@ -266,7 +266,7 @@ npm run dev
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see the [Contributing Guide](./ait-cms-backend/CONTRIBUTING.md) for details.
+Contributions are welcome! Please see the [Contributing Guide](./CONTRIBUTING.md) for details.
 
 ```bash
 # Fork the repo, then:

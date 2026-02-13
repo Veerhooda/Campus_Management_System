@@ -93,6 +93,7 @@ export class EventsController {
   }
 
   @Post(':id/register')
+  @Roles(Role.STUDENT)
   async register(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser('id') userId: string,
@@ -101,6 +102,7 @@ export class EventsController {
   }
 
   @Delete(':id/register')
+  @Roles(Role.STUDENT)
   async unregister(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser('id') userId: string,

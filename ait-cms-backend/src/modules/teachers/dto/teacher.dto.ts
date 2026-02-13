@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsUUID, IsBoolean } from 'class-validator';
 
 export class CreateTeacherProfileDto {
   @IsString()
@@ -18,4 +18,9 @@ export class UpdateTeacherProfileDto {
   @IsUUID()
   @IsOptional()
   departmentId?: string;
+}
+
+export class ToggleCounsellorDto {
+  @IsBoolean()
+  status: boolean;
 }

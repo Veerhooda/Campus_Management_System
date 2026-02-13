@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma';
 import { CreateTeacherProfileDto, UpdateTeacherProfileDto } from './dto';
@@ -186,5 +187,68 @@ export class TeachersService {
 
     this.logger.log(`Teacher profile deleted: ${id}`);
     return { message: 'Teacher profile deleted successfully' };
+  }
+
+  // --- Counselling Features ---
+
+  async toggleCounsellorStatus(teacherId: string, status: boolean) {
+    const teacher = await this.prisma.teacher.update({
+      where: { id: teacherId },
+      // @ts-ignore: Schema update pending
+      data: { isCounsellor: status },
+      include: { user: { select: { firstName: true, lastName: true } } },
+    });
+    
+    // @ts-ignore: Schema update pending
+    this.logger.log(`Teacher ${teacher.user.firstName} counsellor status set to: ${status}`);
+    return teacher;
+  }
+
+  async getMentees(teacherId: string) {
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { id: teacherId },
+      include: {
+        // @ts-ignore: Schema update pending
+        mentees: {
+          include: {
+            user: {
+              select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+            },
+            class: true,
+          },
+        },
+      },
+    });
+
+    if (!teacher) throw new NotFoundException('Teacher not found');
+    // @ts-ignore: Schema update pending
+    if (!teacher.isCounsellor) throw new BadRequestException('Teacher is not a counsellor');
+
+    // @ts-ignore: Schema update pending
+    // @ts-ignore: Schema update pending
+    // Calculate attendance stats for each mentee
+    const mentees = teacher.mentees;
+    
+    // We can optimize this with aggregation, but loop is fine for batch size (~20 students)
+    const menteesWithStats = await Promise.all(mentees.map(async (mentee: any) => {
+        const totalClasses = await this.prisma.attendance.count({
+            where: { studentId: mentee.id }
+        });
+        const presentClasses = await this.prisma.attendance.count({
+            where: { studentId: mentee.id, isPresent: true }
+        });
+        const attendancePercentage = totalClasses > 0 ? (presentClasses / totalClasses) * 100 : 0;
+
+        return {
+            ...mentee,
+            attendanceStats: {
+                total: totalClasses,
+                present: presentClasses,
+                percentage: attendancePercentage
+            }
+        };
+    }));
+
+    return menteesWithStats;
   }
 }

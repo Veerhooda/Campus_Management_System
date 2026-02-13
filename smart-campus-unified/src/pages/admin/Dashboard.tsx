@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/shared/StatCard';
-import { grievanceService, eventService } from '../../services';
+import { grievanceService, eventService, userService } from '../../services';
 
 const recentLogs = [
   { id: '1', action: 'User Created', user: 'John Smith', type: 'Student', time: '2 mins ago', icon: 'person_add' },
@@ -33,16 +33,26 @@ const AdminDashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         // Fetch data in parallel
-        const [grievanceData, eventData] = await Promise.allSettled([
+        const [userStatsResult, grievanceData, eventData] = await Promise.allSettled([
+          userService.getStats(),
           grievanceService.getGrievances(1, 100, 'OPEN'),
-          eventService.getEvents(1, 50),
+          eventService.getEvents(1, 100), // Get more events to filter for this week if needed
         ]);
 
+        const statsData = userStatsResult.status === 'fulfilled' ? userStatsResult.value : null;
+
         setStats({
-          totalUsers: '2,847', // Would come from userService.getCounts() when implemented
-          activeFaculty: '186',
+          totalUsers: statsData ? statsData.totalUsers.toString() : '...',
+          activeFaculty: statsData ? statsData.totalTeachers.toString() : '...',
           openGrievances: grievanceData.status === 'fulfilled' ? grievanceData.value.meta.total.toString() : '?',
-          eventsThisWeek: eventData.status === 'fulfilled' ? eventData.value.data.length.toString() : '?',
+          // Simple count for now, real "this week" logic could be added later
+          eventsThisWeek: eventData.status === 'fulfilled' ? eventData.value.data.filter(e => {
+              const eventDate = new Date(e.startDateTime);
+              const now = new Date();
+              const oneWeekFromNow = new Date();
+              oneWeekFromNow.setDate(now.getDate() + 7);
+              return eventDate >= now && eventDate <= oneWeekFromNow;
+          }).length.toString() : '?',
         });
       } catch (err) {
         console.error(err);
@@ -78,7 +88,7 @@ const AdminDashboard: React.FC = () => {
             Export Report
           </button>
           <button 
-            onClick={() => alert('Settings page coming soon!')}
+            onClick={() => navigate('/admin/settings')}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">settings</span>
@@ -117,7 +127,7 @@ const AdminDashboard: React.FC = () => {
             ].map((action) => (
               <button 
                 key={action.label}
-                onClick={() => navigate(quickActionRoutes[action.label] || '/admin/dashboard')}
+                onClick={() => navigate(action.label === 'Settings' ? '/admin/settings' : (quickActionRoutes[action.label] || '/admin/dashboard'))}
                 className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl ${action.color} hover:scale-[1.02] transition-transform cursor-pointer`}
               >
                 <span className="material-symbols-outlined">{action.icon}</span>

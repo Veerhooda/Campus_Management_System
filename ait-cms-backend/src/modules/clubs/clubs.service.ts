@@ -13,7 +13,8 @@ export class ClubsService {
     });
 
     if (!organizer?.organizerProfile) {
-      throw new NotFoundException('Organizer profile not found');
+      // Return null instead of 404 to avoid console errors
+      return null;
     }
 
     return organizer.organizerProfile.club || null;
@@ -25,18 +26,23 @@ export class ClubsService {
       include: { organizerProfile: true },
     });
 
-    if (!organizer?.organizerProfile) {
-      throw new NotFoundException('User is not an organizer');
+    let organizerProfile = organizer?.organizerProfile;
+
+    if (!organizerProfile) {
+      // Auto-create profile if missing (user is authenticated as ORGANIZER)
+      organizerProfile = await this.prisma.organizer.create({
+        data: { userId: organizerUserId },
+      });
     }
 
     const club = await this.prisma.club.upsert({
-      where: { organizerId: organizer.organizerProfile.id },
+      where: { organizerId: organizerProfile.id },
       update: {
         ...data,
       },
       create: {
         ...data,
-        organizerId: organizer.organizerProfile.id,
+        organizerId: organizerProfile.id,
       },
     });
 

@@ -60,7 +60,7 @@ export class FilesController {
     res.setHeader('Content-Type', mimeType);
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="${encodeURIComponent(filename)}"`,
+      `inline; filename="${encodeURIComponent(filename)}"`,
     );
     res.sendFile(filePath);
   }

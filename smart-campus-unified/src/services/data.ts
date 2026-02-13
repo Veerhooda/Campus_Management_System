@@ -179,6 +179,11 @@ export const studentService = {
     const response = await api.get<ApiResponse<PaginatedResponse<Student>>>(`/students/class/${classId}`);
     return response.data.data?.data || [];
   },
+
+  getProfile: async (): Promise<Student> => {
+    const response = await api.get<ApiResponse<Student>>('/students/me');
+    return response.data.data;
+  },
 };
 
 // Grievance service
@@ -272,6 +277,11 @@ export const userService = {
     return response.data.data;
   },
 
+  getStats: async (): Promise<{ totalUsers: number; totalStudents: number; totalTeachers: number; totalAdmins: number }> => {
+    const response = await api.get<ApiResponse<{ totalUsers: number; totalStudents: number; totalTeachers: number; totalAdmins: number }>>('/users/stats');
+    return response.data.data;
+  },
+
   getUsersByRole: async (role: string, page = 1, limit = 20): Promise<PaginatedResponse<User>> => {
     const response = await api.get<ApiResponse<PaginatedResponse<User>>>(`/users/role/${role}`, { params: { page, limit } });
     return response.data.data;
@@ -297,6 +307,11 @@ export const userService = {
 
   deleteUser: async (id: string): Promise<void> => {
     await api.delete(`/users/${id}`);
+  },
+
+  getAllTeachers: async (): Promise<TeacherInfo[]> => {
+    const response = await api.get<ApiResponse<{ data: TeacherInfo[] }>>('/teachers', { params: { limit: 100 } });
+    return response.data.data.data;
   },
 };
 

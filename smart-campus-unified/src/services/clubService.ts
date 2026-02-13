@@ -35,18 +35,18 @@ export interface ClubMember {
 
 export const clubService = {
   getMyClub: async () => {
-    const response = await api.get<Club>('/clubs/my-club');
-    return response.data;
+    const response = await api.get<ApiResponse<Club>>('/clubs/my-club');
+    return response.data.data;
   },
 
   updateClub: async (data: Partial<Club>) => {
-    const response = await api.put<Club>('/clubs/my-club', data);
-    return response.data;
+    const response = await api.put<ApiResponse<Club>>('/clubs/my-club', data);
+    return response.data.data;
   },
 
   addMember: async (email: string) => {
-    const response = await api.post('/clubs/members', { email });
-    return response.data;
+    const response = await api.post<ApiResponse<any>>('/clubs/members', { email });
+    return response.data.data;
   },
 
   getMembers: async (): Promise<ClubMember[]> => {

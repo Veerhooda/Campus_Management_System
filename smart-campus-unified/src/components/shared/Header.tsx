@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, getPrimaryRole, getDisplayName } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -23,6 +23,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Get page title from path
   const getPageTitle = (): string => {
@@ -101,7 +102,14 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </button>
 
         {/* Notifications */}
-        <button className="relative p-2 text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+        <button 
+          onClick={() => {
+            const role = getPrimaryRole(user?.roles as any);
+            const basePath = role === 'TEACHER' ? 'faculty' : role.toLowerCase();
+            navigate(`/${basePath}/notifications`);
+          }}
+          className="relative p-2 text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+        >
           <span className="material-symbols-outlined">notifications</span>
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-surface-dark" />
         </button>

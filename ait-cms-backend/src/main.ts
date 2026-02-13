@@ -15,7 +15,9 @@ async function bootstrap() {
   const nodeEnv = configService.get<string>('nodeEnv', 'development');
 
   // Security middleware
-  app.use(helmet());
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }));
 
   // Enable CORS
   app.enableCors({

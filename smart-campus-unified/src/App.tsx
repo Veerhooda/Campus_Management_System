@@ -16,6 +16,7 @@ import FacultyDashboard from './pages/faculty/Dashboard';
 import AttendanceMarking from './pages/faculty/Attendance';
 import NotesUpload from './pages/faculty/NotesUpload';
 import FacultyBroadcast from './pages/faculty/Broadcast';
+import MentorshipDashboard from './pages/faculty/MentorshipDashboard';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -27,6 +28,10 @@ import UserManagement from './pages/admin/UserManagement';
 import Broadcast from './pages/admin/Broadcast';
 import TimetableManagement from './pages/admin/TimetableManagement';
 import AdminClubs from './pages/admin/AdminClubs';
+
+import AdminCounsellors from './pages/admin/AdminCounsellors';
+import AdminMentorship from './pages/admin/AdminMentorship';
+import Settings from './pages/admin/Settings';
 
 // Student Feature Pages
 import StudentGrievances from './pages/student/Grievances';
@@ -159,6 +164,11 @@ const App: React.FC = () => {
             <AttendanceMarking />
           </ProtectedRoute>
         } />
+        <Route path="/faculty/mentorship" element={
+          <ProtectedRoute allowedRoles={['TEACHER']}>
+            <MentorshipDashboard />
+          </ProtectedRoute>
+        } />
         <Route path="/faculty/broadcast" element={
           <ProtectedRoute allowedRoles={['TEACHER']}>
             <FacultyBroadcast />
@@ -224,6 +234,21 @@ const App: React.FC = () => {
         <Route path="/admin/clubs" element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <AdminClubs />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/counsellors" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminCounsellors />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/mentorship" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminMentorship />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/settings" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Settings />
           </ProtectedRoute>
         } />
 

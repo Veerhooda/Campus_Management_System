@@ -45,6 +45,7 @@ export class NotificationsController {
    * Get my notifications
    */
   @Get()
+  @Roles(Role.STUDENT, Role.TEACHER, Role.ADMIN, Role.ORGANIZER)
   async getMyNotifications(
     @CurrentUser('id') userId: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -59,6 +60,7 @@ export class NotificationsController {
    * Get unread count
    */
   @Get('unread-count')
+  @Roles(Role.STUDENT, Role.TEACHER, Role.ADMIN, Role.ORGANIZER)
   async getUnreadCount(@CurrentUser('id') userId: string) {
     return this.notificationsService.getUnreadCount(userId);
   }
@@ -68,6 +70,7 @@ export class NotificationsController {
    * Mark notification as read
    */
   @Post(':id/read')
+  @Roles(Role.STUDENT, Role.TEACHER, Role.ADMIN, Role.ORGANIZER)
   async markAsRead(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser('id') userId: string,
@@ -80,6 +83,7 @@ export class NotificationsController {
    * Mark all notifications as read
    */
   @Post('read-all')
+  @Roles(Role.STUDENT, Role.TEACHER, Role.ADMIN, Role.ORGANIZER)
   async markAllAsRead(@CurrentUser('id') userId: string) {
     return this.notificationsService.markAllAsRead(userId);
   }
@@ -89,6 +93,7 @@ export class NotificationsController {
    * Delete a notification
    */
   @Delete(':id')
+  @Roles(Role.STUDENT, Role.TEACHER, Role.ADMIN, Role.ORGANIZER)
   async delete(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser('id') userId: string,
@@ -101,6 +106,7 @@ export class NotificationsController {
    * Delete all read notifications
    */
   @Delete('read')
+  @Roles(Role.STUDENT, Role.TEACHER, Role.ADMIN, Role.ORGANIZER)
   async deleteAllRead(@CurrentUser('id') userId: string) {
     return this.notificationsService.deleteAllRead(userId);
   }

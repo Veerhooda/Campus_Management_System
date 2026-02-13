@@ -4,4 +4,5 @@ export * from './data';
 export { default as api } from './api';
 export { default as authService } from './auth';
 export * from './clubService';
+export * from './counselling';
 

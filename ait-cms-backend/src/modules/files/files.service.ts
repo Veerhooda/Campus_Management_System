@@ -39,12 +39,28 @@ export class FilesService implements OnModuleInit {
     uploadedByUserId: string,
     subjectId?: string,
   ) {
-    const teacher = await this.prisma.teacher.findUnique({
+    let teacher = await this.prisma.teacher.findUnique({
       where: { userId: uploadedByUserId },
     });
 
+    // If not a teacher (e.g. Admin/Organizer), create a teacher profile for them to allow upload
+    // This is a workaround since File model requires uploadedById to be a Teacher ID
     if (!teacher) {
-      throw new BadRequestException('Only teachers can upload files');
+      this.logger.log(`Creating auto-teacher profile for user ${uploadedByUserId} to allow file upload`);
+      
+      // Get a default department (e.g., General or first available)
+      const department = await this.prisma.department.findFirst();
+      if (!department) {
+        throw new BadRequestException('Cannot upload: No departments found to link profile');
+      }
+
+      teacher = await this.prisma.teacher.create({
+        data: {
+          userId: uploadedByUserId,
+          employeeId: `AUTO-${uuid().substring(0, 8).toUpperCase()}`,
+          departmentId: department.id,
+        },
+      });
     }
 
     // Validate subject if provided
@@ -125,6 +141,7 @@ export class FilesService implements OnModuleInit {
     });
 
     if (!teacher) {
+      // If no teacher profile, they haven't uploaded anything yet
       return { data: [], meta: { total: 0, page, limit, totalPages: 0 } };
     }
 

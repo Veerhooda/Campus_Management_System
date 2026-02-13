@@ -104,4 +104,15 @@ export class StudentsController {
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.studentsService.remove(id);
   }
+
+  // --- Counselling Endpoints ---
+
+  @Patch(':id/assign-counsellor')
+  @Roles(Role.ADMIN)
+  async assignCounsellor(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('counsellorId') counsellorId: string | null,
+  ) {
+    return this.studentsService.assignCounsellor(id, counsellorId);
+  }
 }

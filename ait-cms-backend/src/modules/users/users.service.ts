@@ -137,6 +137,31 @@ export class UsersService {
   }
 
   /**
+   * Get user statistics
+   */
+  async getStats() {
+    const [totalUsers, totalStudents, totalTeachers, totalAdmins] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.user.count({
+        where: { roles: { some: { role: Role.STUDENT } } },
+      }),
+      this.prisma.user.count({
+        where: { roles: { some: { role: Role.TEACHER } } },
+      }),
+      this.prisma.user.count({
+        where: { roles: { some: { role: Role.ADMIN } } },
+      }),
+    ]);
+
+    return {
+      totalUsers,
+      totalStudents,
+      totalTeachers,
+      totalAdmins,
+    };
+  }
+
+  /**
    * Find all users (with pagination)
    */
   async findAll(page = 1, limit = 20) {

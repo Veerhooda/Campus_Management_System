@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/shared/StatCard';
-import { eventService } from '../../services';
+import { eventService, clubService } from '../../services';
 import { CampusEvent } from '../../types';
 
 interface Deadline {
@@ -44,33 +44,47 @@ const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
 const OrganizerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<CampusEvent[]>([]);
+  const [club, setClub] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // AI Suggestions State
   const [aiSuggestions, setAiSuggestions] = useState<{title: string; description: string}[]>([]);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
 
-  // Fetch events on mount
+  // Feedback State
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackData, setFeedbackData] = useState<{ averageRating: number; reviews: any[] } | null>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+
+  // Fetch Data on Mount
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await eventService.getEvents(1, 20);
-        setEvents(data.data);
+        console.log('Fetching dashboard data...');
+        const [eventsData, clubData] = await Promise.all([
+          eventService.getEvents(1, 20),
+          clubService.getMyClub(),
+        ]);
+        
+        console.log('Dashboard Data:', { eventsData, clubData });
+
+        if (eventsData && eventsData.data) {
+             setEvents(eventsData.data);
+        }
+        
+        if (clubData) {
+            setClub(clubData);
+        }
       } catch (err) {
-        console.error('Failed to load events:', err);
+        console.error('Failed to load dashboard data:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEvents();
+    fetchData();
   }, []);
-
-  // Feedback Data
-  const [feedbackLoading, setFeedbackLoading] = useState(false);
-  const [feedbackData, setFeedbackData] = useState<{ averageRating: number; reviews: any[] } | null>(null);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-
-  const handleCreateEvent = () => navigate('/organizer/events');
 
   const handleViewFeedback = async (eventId: string) => {
     try {
@@ -99,7 +113,7 @@ const OrganizerDashboard: React.FC = () => {
     setIsLoadingAi(false);
   };
 
-  // Mini Calendar Component
+  // Mini Calendar Component Helper
   const currentDate = new Date();
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -108,7 +122,8 @@ const OrganizerDashboard: React.FC = () => {
 
   // Stats
   const activeEvents = events.filter(e => e.status === 'PUBLISHED').length;
-  const totalRegistrations = events.reduce((acc) => acc + (Math.floor(Math.random() * 100) + 50), 0); // Placeholder
+  // Calculate total registrations from events if available, else mock
+  const totalRegistrations = events.reduce((acc, curr) => acc + (curr._count?.registrations || 0), 0); 
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in">
@@ -138,6 +153,44 @@ const OrganizerDashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
+       {/* Club Profile Card */}
+       {club && (
+        <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden relative group">
+           <div className="h-32 w-full bg-slate-200 relative">
+              {club.bgUrl && <img src={club.bgUrl} alt="Cover" className="w-full h-full object-cover" />}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+           </div>
+           
+           <div className="px-6 pb-6 relative flex justify-between items-end -mt-12">
+              <div className="flex items-end gap-5">
+                 <div className="w-24 h-24 rounded-full border-4 border-white dark:border-surface-dark bg-white shadow-md overflow-hidden flex items-center justify-center">
+                    {club.logoUrl ? (
+                       <img src={club.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                       <span className="text-3xl font-bold text-primary">{club.name ? club.name[0] : '?'}</span>
+                    )}
+                 </div>
+                 <div className="mb-1">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white drop-shadow-sm shadow-black/50 sm:text-slate-900 sm:drop-shadow-none">{club.name || 'Your Club'}</h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">@{club.instagram || 'ait_club'}</p>
+                 </div>
+              </div>
+              
+              <button 
+                onClick={() => navigate('/organizer/club')}
+                className="mb-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+              >
+                 <span className="material-symbols-outlined text-[18px]">edit</span>
+                 Edit Profile
+              </button>
+           </div>
+           
+           <div className="px-6 pb-6 pt-2">
+              <p className="text-slate-600 dark:text-slate-300 max-w-3xl">{club.description || 'Welcome to your club dashboard. Complete your profile to attract more members.'}</p>
+           </div>
+        </div>
+       )}
 
       {/* AI Suggestions Section */}
       {aiSuggestions.length > 0 && (

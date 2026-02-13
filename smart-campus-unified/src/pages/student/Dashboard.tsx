@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/shared/StatCard';
 import { useAuth } from '../../context/AuthContext';
-import { timetableService, attendanceService, notificationService } from '../../services';
-import { TimetableSlot, Notification } from '../../types';
+import { timetableService, attendanceService, notificationService, studentService } from '../../services';
+import { TimetableSlot, Notification, Teacher } from '../../types';
 
+// ... (helper functions remain same) ...
 const getTodayDay = (): string => {
   const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
   return days[new Date().getDay()];
@@ -26,6 +27,7 @@ const StudentDashboard: React.FC = () => {
   const [timetable, setTimetable] = useState<TimetableSlot[]>([]);
   const [attendanceStats, setAttendanceStats] = useState<{ percentage: number; present: number; absent: number; total: number } | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [counsellor, setCounsellor] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,10 +38,11 @@ const StudentDashboard: React.FC = () => {
         setLoading(true);
         
         // Fetch in parallel
-        const [timetableData, attendanceData, notifData] = await Promise.allSettled([
+        const [timetableData, attendanceData, notifData, profileData] = await Promise.allSettled([
           timetableService.getStudentTimetable(),
           attendanceService.getMyAttendance(),
           notificationService.getNotifications(1, 5),
+          studentService.getProfile(),
         ]);
 
         if (timetableData.status === 'fulfilled') {
@@ -52,6 +55,10 @@ const StudentDashboard: React.FC = () => {
         
         if (notifData.status === 'fulfilled') {
           setNotifications(notifData.value.data);
+        }
+
+        if (profileData.status === 'fulfilled' && profileData.value.counsellor) {
+          setCounsellor(profileData.value.counsellor);
         }
       } catch (err) {
         setError('Failed to load dashboard data');
@@ -230,6 +237,54 @@ const StudentDashboard: React.FC = () => {
 
         {/* Right Sidebar Column */}
         <div className="xl:col-span-4 flex flex-col gap-6">
+          {/* Counsellor Widget */}
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+               <span className="material-symbols-outlined text-8xl">psychology</span>
+            </div>
+            <h3 className="text-lg font-bold mb-4 relative z-10">My Counsellor</h3>
+            {loading ? (
+              <div className="flex items-center gap-4">
+                 <Skeleton className="w-12 h-12 rounded-full bg-white/20" />
+                 <div className="space-y-2">
+                    <Skeleton className="w-24 h-4 bg-white/20" />
+                    <Skeleton className="w-32 h-3 bg-white/20" />
+                 </div>
+              </div>
+            ) : counsellor ? (
+              <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl font-bold border-2 border-white/30">
+                    {counsellor.user?.firstName[0]}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg">{counsellor.user?.firstName} {counsellor.user?.lastName}</h4>
+                    <p className="text-indigo-100 text-sm">Faculty Counsellor</p>
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm text-indigo-50">
+                   <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px]">mail</span>
+                      <span>{counsellor.user?.email}</span>
+                   </div>
+                   {counsellor.user?.phone && (
+                     <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">call</span>
+                        <span>{counsellor.user?.phone}</span>
+                     </div>
+                   )}
+                </div>
+              </div>
+            ) : (
+              <div className="relative z-10 py-2">
+                <p className="text-indigo-100 mb-2">You have not been assigned a counsellor yet.</p>
+                <div className="text-xs bg-white/10 p-2 rounded text-indigo-50">
+                  Contact your department head if you need immediate assistance.
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Quick Actions */}
           <div className="bg-white dark:bg-surface-dark p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Actions</h3>

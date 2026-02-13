@@ -31,6 +31,16 @@ export class UsersController {
   }
 
   /**
+   * GET /api/v1/users/stats
+   * Get user statistics (Admin only)
+   */
+  @Get('stats')
+  @Roles(Role.ADMIN)
+  async getStats() {
+    return this.usersService.getStats();
+  }
+
+  /**
    * GET /api/v1/users
    * Get all users with pagination (Admin only)
    */

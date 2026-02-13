@@ -122,6 +122,11 @@ model Student {
   attendanceRecords Attendance[]
   clubMemberships   ClubMember[]
   eventFeedback     EventFeedback[]
+  
+  // Counselling
+  counsellorId String?  @map("counsellor_id")
+  counsellor   Teacher? @relation("CounsellorStudents", fields: [counsellorId], references: [id], onDelete: SetNull)
+  counsellingSessions CounsellingSession[]
 
   @@map("students")
 }
@@ -138,6 +143,11 @@ model Teacher {
   timetableSlots   TimetableSlot[]
   uploadedFiles    File[]
   attendanceMarked Attendance[]
+  
+  // Counselling
+  isCounsellor Boolean @default(false) @map("is_counsellor")
+  mentees      Student[] @relation("CounsellorStudents")
+  counsellingSessions CounsellingSession[]
 
   @@map("teachers")
 }
@@ -211,6 +221,7 @@ model Event {
   endDateTime   DateTime    @map("end_date_time")
   status        EventStatus @default(DRAFT)
   maxCapacity   Int?        @map("max_capacity")
+  venue         String?
   
   // New Visuals
   posterUrl     String?     @map("poster_url")
@@ -446,4 +457,23 @@ model File {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("files")
+}
+
+// ============ COUNSELLING ============
+
+model CounsellingSession {
+  id           String   @id @default(uuid())
+  studentId    String   @map("student_id")
+  counsellorId String   @map("counsellor_id") // Teacher ID
+  date         DateTime @default(now())
+  notes        String
+  actionItems  String?  @map("action_items")
+  
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  counsellor Teacher @relation(fields: [counsellorId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("counselling_sessions")
 }

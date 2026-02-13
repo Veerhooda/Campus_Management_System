@@ -35,6 +35,7 @@ export class EventsService {
         endDateTime,
         maxCapacity: dto.maxParticipants,
         roomId: dto.roomId,
+        venue: dto.venue,
         posterUrl: dto.posterUrl,
         themeColor: dto.themeColor,
         isFeedbackEnabled: dto.isFeedbackEnabled ?? false,
@@ -138,6 +139,7 @@ export class EventsService {
     if (dto.startDate) updateData.startDateTime = new Date(dto.startDate);
     if (dto.endDate) updateData.endDateTime = new Date(dto.endDate);
     if (dto.maxParticipants !== undefined) updateData.maxCapacity = dto.maxParticipants;
+    if (dto.venue !== undefined) updateData.venue = dto.venue;
     
     // Remove DTO-specific fields that don't match schema
     delete updateData.startDate;

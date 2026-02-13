@@ -27,13 +27,14 @@ const StudentEvents: React.FC = () => {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      if (activeTab === 'upcomming') {
-        const data = await eventService.getUpcoming(1, 100);
-        setUpcomingEvents(data.data);
-      } else {
-        const data = await eventService.getMyRegistrations();
-        setMyRegistrations(data);
-      }
+      // Always fetch my registrations to check status
+      const [upcomingData, myRegData] = await Promise.all([
+        eventService.getUpcoming(1, 100),
+        eventService.getMyRegistrations()
+      ]);
+      
+      setUpcomingEvents(upcomingData.data);
+      setMyRegistrations(myRegData);
     } catch (error) {
       console.error('Failed to fetch events:', error);
     } finally {
@@ -45,17 +46,30 @@ const StudentEvents: React.FC = () => {
     try {
       setActionLoading(eventId);
       await eventService.register(eventId);
-      await notificationService.create({
-        title: 'Event Registration',
-        message: 'You have successfully registered for the event.',
-        type: 'EVENT',
-        userId: user?.id || '',
-      });
+      
+      // Try to send notification, but don't fail operation if it fails
+      try {
+        await notificationService.create({
+          title: 'Event Registration',
+          message: 'You have successfully registered for the event.',
+          type: 'EVENT',
+          userId: user?.id || '',
+        });
+      } catch (notifError) {
+        console.warn('Failed to send registration notification:', notifError);
+      }
+
       alert('Registered successfully!');
       fetchEvents(); // Refresh
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration failed:', error);
-      alert('Failed to register.');
+      // Check if error is "Already registered" conflict
+      if (error.response?.status === 409) {
+          alert('You are already registered for this event.');
+          fetchEvents(); // Refresh state
+      } else {
+          alert(error.message || 'Failed to register.');
+      }
     } finally {
       setActionLoading(null);
     }
@@ -149,9 +163,10 @@ const StudentEvents: React.FC = () => {
           <EventCard 
             key={event.id} 
             event={event} 
-            actionLabel="Register"
+            actionLabel={myRegistrations.some(r => r.id === event.id) ? "Registered" : "Register"}
             onAction={() => handleRegister(event.id)}
             loading={actionLoading === event.id}
+            isRegistered={myRegistrations.some(r => r.id === event.id)}
           />
         ))}
 

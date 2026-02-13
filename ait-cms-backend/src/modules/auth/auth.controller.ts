@@ -64,7 +64,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async logout(
     @CurrentUser('id') userId: string,
-    @Body() body: { refreshToken?: string },
+    @Body() body: { refreshToken?: string } = {},
   ): Promise<{ message: string }> {
     await this.authService.logout(userId, body.refreshToken);
     return { message: 'Successfully logged out' };

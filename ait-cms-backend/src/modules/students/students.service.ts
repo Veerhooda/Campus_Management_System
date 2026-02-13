@@ -79,6 +79,11 @@ export class StudentsService {
         include: {
           user: { select: { id: true, email: true, firstName: true, lastName: true, isActive: true } },
           class: { include: { department: true } },
+          counsellor: {
+            include: {
+              user: { select: { firstName: true, lastName: true, email: true, phone: true } },
+            },
+          },
         },
         orderBy: { rollNumber: 'asc' },
       }),
@@ -119,6 +124,12 @@ export class StudentsService {
       include: {
         user: { select: { id: true, email: true, firstName: true, lastName: true, phone: true, isActive: true } },
         class: { include: { department: true } },
+        // @ts-ignore: Schema update pending
+        counsellor: {
+          include: {
+            user: { select: { firstName: true, lastName: true, email: true, phone: true } },
+          },
+        },
       },
     });
 
@@ -142,6 +153,12 @@ export class StudentsService {
         take: limit,
         include: {
           user: { select: { id: true, email: true, firstName: true, lastName: true, isActive: true } },
+          class: { include: { department: true } },
+          counsellor: {
+            include: {
+              user: { select: { firstName: true, lastName: true, email: true, phone: true } },
+            },
+          },
         },
         orderBy: { rollNumber: 'asc' },
       }),
@@ -200,5 +217,47 @@ export class StudentsService {
 
     this.logger.log(`Student profile deleted: ${id}`);
     return { message: 'Student profile deleted successfully' };
+  }
+
+  // --- Counselling Features ---
+
+  async assignCounsellor(studentId: string, counsellorId: string | null) {
+    if (counsellorId) {
+      // Verify counsellor exists and is valid
+      const counsellor = await this.prisma.teacher.findUnique({
+        where: { id: counsellorId },
+      });
+
+      if (!counsellor) {
+        throw new NotFoundException('Counsellor not found');
+      }
+
+      // @ts-ignore: Schema update pending
+      if (!counsellor.isCounsellor) {
+        throw new ConflictException('Selected teacher is not a counsellor');
+      }
+    }
+
+    const student = await this.prisma.student.update({
+      where: { id: studentId },
+      // @ts-ignore: Schema update pending
+      data: { counsellorId },
+      include: {
+        // @ts-ignore: Schema update pending
+        counsellor: {
+          include: {
+            user: { select: { firstName: true, lastName: true, email: true, phone: true } },
+          },
+        },
+      },
+    });
+
+    if (counsellorId) {
+       this.logger.log(`Student ${studentId} assigned to counsellor ${counsellorId}`);
+    } else {
+       this.logger.log(`Student ${studentId} unassigned from counsellor`);
+    }
+
+    return student;
   }
 }

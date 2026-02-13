@@ -84,6 +84,9 @@ export interface CampusEvent {
   posterUrl?: string;
   themeColor?: string;
   isFeedbackEnabled?: boolean;
+  _count?: {
+    registrations: number;
+  };
 }
 
 export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED';
@@ -100,6 +103,8 @@ export interface Student {
     lastName: string;
     email: string;
   };
+  counsellorId?: string;
+  counsellor?: Teacher;
 }
 
 export interface AttendanceRecord {
@@ -234,10 +239,34 @@ export interface Teacher {
   userId: string;
   employeeId: string;
   departmentId?: string;
+  isCounsellor?: boolean;
   user?: {
     firstName: string;
     lastName: string;
     email: string;
+    phone?: string;
+  };
+}
+
+export interface CounsellingSession {
+  id: string;
+  studentId: string;
+  counsellorId: string;
+  date: string;
+  notes: string;
+  actionItems?: string;
+  student?: {
+    user: {
+      firstName: string;
+      lastName: string;
+      email?: string;
+    };
+  };
+  counsellor?: {
+    user: {
+      firstName: string;
+      lastName: string;
+    };
   };
 }
 

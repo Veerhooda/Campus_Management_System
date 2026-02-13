@@ -10,14 +10,18 @@ import {
   ParseUUIDPipe,
   ParseIntPipe,
   DefaultValuePipe,
+  BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { TeachersService } from './teachers.service';
-import { CreateTeacherProfileDto, UpdateTeacherProfileDto } from './dto';
+import { CreateTeacherProfileDto, UpdateTeacherProfileDto, ToggleCounsellorDto } from './dto';
 import { Roles, CurrentUser } from '../../common/decorators';
 
 @Controller('teachers')
 export class TeachersController {
+  private readonly logger = new Logger(TeachersController.name);
+
   constructor(private readonly teachersService: TeachersService) {}
 
   @Post(':userId')
@@ -79,5 +83,24 @@ export class TeachersController {
   @Roles(Role.ADMIN)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.teachersService.remove(id);
+  }
+
+  // --- Counselling Endpoints ---
+
+  @Patch(':id/counsellor')
+  @Roles(Role.ADMIN)
+  async toggleCounsellor(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ToggleCounsellorDto,
+  ) {
+    this.logger.log(`Toggling counsellor status for teacher ${id}. Payload: ${JSON.stringify(dto)}`);
+    return this.teachersService.toggleCounsellorStatus(id, dto.status);
+  }
+
+  @Get('me/mentees')
+  @Roles(Role.TEACHER)
+  async getMyMentees(@CurrentUser('id') userId: string) {
+    const teacher = await this.teachersService.findByUserId(userId);
+    return this.teachersService.getMentees(teacher.id);
   }
 }

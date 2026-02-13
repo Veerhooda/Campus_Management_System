@@ -29,6 +29,7 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
   const facultyItems: NavItem[] = [
     { icon: 'grid_view', label: 'Dashboard', path: '/faculty/dashboard' },
     { icon: 'calendar_month', label: 'Schedule', path: '/faculty/schedule' },
+    { icon: 'psychology', label: 'Mentorship', path: '/faculty/mentorship' },
     { icon: 'check_circle', label: 'Mark Attendance', path: '/faculty/attendance' },
     { icon: 'upload_file', label: 'Upload Notes', path: '/faculty/notes' },
     { icon: 'campaign', label: 'Broadcast', path: '/faculty/broadcast' },
@@ -40,6 +41,8 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
     { icon: 'people', label: 'User Management', path: '/admin/users' },
     { icon: 'campaign', label: 'Broadcast', path: '/admin/broadcast' },
     { icon: 'calendar_month', label: 'Timetable', path: '/admin/timetable', roles: ['ADMIN'] },
+    { icon: 'psychology', label: 'Counsellors', path: '/admin/counsellors', roles: ['ADMIN'] },
+    { icon: 'handshake', label: 'Mentorship', path: '/admin/mentorship', roles: ['ADMIN'] },
     { icon: 'groups', label: 'Clubs', path: '/admin/clubs', roles: ['ADMIN'] },
     { icon: 'event', label: 'Events', path: '/admin/events' },
     { icon: 'support_agent', label: 'Grievances', path: '/admin/grievances' },
