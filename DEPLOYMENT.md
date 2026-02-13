@@ -86,13 +86,45 @@ This is often better for performance as Vercel handles the global CDN for the fr
 
 Follow steps 1-4 from Option 1, **BUT** modify `docker-compose.prod.yml` to remove the `web` service (frontend), or just stop it: `docker stop ait-cms-web`.
 
-### Part B: Frontend (Vercel)
+### Part B: Frontend (Vercel) - Step-by-Step
 
-1.  Push your code to GitHub.
-2.  Import the repo to **Vercel**.
-3.  Set Root Directory to `smart-campus-unified`.
-4.  Add Environment Variable: `VITE_API_URL` = `https://your-backend-api.com/api/v1`.
-5.  Deploy.
+**⚠️ CRITICAL WARNING: Mixed Content Issue**
+Vercel serves your site over **HTTPS**. If your Backend is on an HTTP VPS (e.g., `http://123.45.67.89:3000`), the browser will **BLOCK** requests to it.
+
+- **Solution**: You MUST set up SSL for your backend (using a domain + Caddy/Nginx) OR deploy the backend to a platform that provides HTTPS (like Render/Railway).
+
+**Steps:**
+
+1.  **Push to GitHub**: Ensure your code is pushed to your remote repository.
+2.  **Log in to Vercel**: Go to [vercel.com](https://vercel.com) and log in with GitHub.
+3.  **Add New Project**:
+    - Click **"Add New..."** -> **"Project"**.
+    - Import your repository (`Campus_Management_System`).
+4.  **Configure Project Settings**:
+    - **Framework Preset**: Select **Vite**.
+    - **Root Directory**: Click "Edit" next to Root Directory and select `smart-campus-unified`. **(Important!)**
+5.  **Environment Variables**:
+    - Click **Environment Variables**.
+    - Key: `VITE_API_URL`
+    - Value: Your Backend URL (e.g., `https://api.yourdomain.com/api/v1` or `https://your-app.onrender.com/api/v1`).
+6.  **Deploy**:
+    - Click **Deploy**.
+    - Wait for the build to finish. Vercel will give you a domain like `https://smart-campus-unified.vercel.app`.
+
+---
+
+## 🟣 Option 3: Backend on Render (Free HTTPS)
+
+If you can't set up a domain/SSL for your VPS, use **Render** for the backend to get a free `https://...` URL.
+
+1.  Create an account on [render.com](https://render.com).
+2.  **New Web Service** -> Connect GitHub Repo.
+3.  **Root Directory**: `ait-cms-backend`.
+4.  **Build Command**: `npm install && npx prisma generate && npm run build`.
+5.  **Start Command**: `npm run start:prod`.
+6.  **Environment Variables**: Add `DATABASE_URL`, `JWT_SECRET`, etc.
+7.  Deploy. You will get a URL like `https://ait-cms-backend.onrender.com`.
+8.  Use _this_ URL for your Vercel `VITE_API_URL`.
 
 ---
 
