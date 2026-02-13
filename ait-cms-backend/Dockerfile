@@ -16,7 +16,7 @@ RUN npx prisma generate
 
 # Build the application
 RUN npm run build
-RUN ls -la dist
+
 
 # Production Stage
 FROM node:20-alpine
