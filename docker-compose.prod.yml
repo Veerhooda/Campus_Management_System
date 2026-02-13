@@ -68,6 +68,15 @@ services:
       timeout: 5s
       retries: 5
 
+  # Public Tunnel (Temporary)
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: ait-cms-tunnel
+    command: tunnel --url http://web:80
+    restart: always
+    depends_on:
+      - web
+
 volumes:
   postgres_data:
   redis_data:
