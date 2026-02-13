@@ -58,7 +58,7 @@ This method runs the Frontend, Backend, Database, and Redis on a single server (
     ```
 
 5.  **Access the App**:
-    - **Frontend**: `http://your-server-ip` (Runs on Port 80)
+    - **Frontend**: `http://your-server-ip:8080` (Runs on Port 8080)
     - **Backend**: `http://your-server-ip:3000`
 
 ### 3. Domain & SSL (Custom Domain)
@@ -69,7 +69,7 @@ To add a domain (e.g., `ait-campus.com`) and HTTPS, install **Caddy** or use **C
 ```bash
 # Caddyfile
 ait-campus.com {
-    reverse_proxy localhost:80
+    reverse_proxy localhost:8080
 }
 api.ait-campus.com {
     reverse_proxy localhost:3000
