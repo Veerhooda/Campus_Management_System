@@ -23,12 +23,14 @@ export interface Club {
 
 export interface ClubMember {
   id: string;
+  studentId: string;
   student: {
     user: {
       firstName: string;
       lastName: string;
       email: string;
-    }
+    };
+    class?: { name: string };
   };
   joinedAt: string;
 }
@@ -67,6 +69,21 @@ export const clubService = {
 
   assignOrganizer: async (clubId: string, email: string): Promise<Club> => {
     const response = await api.put<ApiResponse<Club>>(`/clubs/${clubId}/assign`, { email });
+    return response.data.data;
+  },
+
+  removeMember: async (memberId: string) => {
+    const response = await api.delete<ApiResponse<any>>(`/clubs/members/${memberId}`);
+    return response.data.data;
+  },
+
+  searchStudents: async (query: string) => {
+    const response = await api.get<ApiResponse<any[]>>('/clubs/students/search', { params: { q: query } });
+    return response.data.data;
+  },
+
+  getStudentClubs: async () => {
+    const response = await api.get<ApiResponse<any[]>>('/clubs/my-clubs');
     return response.data.data;
   },
 };

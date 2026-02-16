@@ -80,6 +80,7 @@ model User {
   grievancesSubmitted Grievance[]          @relation("SubmittedGrievances")
   maintenanceRequests MaintenanceRequest[]
   eventRegistrations  EventRegistration[]
+  channelMessages     ChannelMessage[]
 
   @@map("users")
 }
@@ -120,9 +121,10 @@ model Student {
   classId String @map("class_id")
   class   Class  @relation(fields: [classId], references: [id])
 
-  attendanceRecords Attendance[]
-  clubMemberships   ClubMember[]
-  eventFeedback     EventFeedback[]
+  attendanceRecords    Attendance[]
+  clubMemberships      ClubMember[]
+  eventFeedback        EventFeedback[]
+  channelMemberships   ChannelMember[]
   
   // Counselling
   counsellorId String?  @map("counsellor_id")
@@ -191,7 +193,8 @@ model Club {
   organizerId String?    @unique @map("organizer_id")
   organizer   Organizer? @relation(fields: [organizerId], references: [id])
 
-  members ClubMember[]
+  members  ClubMember[]
+  channels Channel[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -477,4 +480,50 @@ model CounsellingSession {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("counselling_sessions")
+}
+
+// ============ CLUB CHANNELS & CHAT ============
+
+model Channel {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  clubId      String   @map("club_id")
+
+  club     Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  members  ChannelMember[]
+  messages ChannelMessage[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("channels")
+}
+
+model ChannelMember {
+  id        String   @id @default(uuid())
+  channelId String   @map("channel_id")
+  studentId String   @map("student_id")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  @@unique([channelId, studentId])
+  @@map("channel_members")
+}
+
+model ChannelMessage {
+  id        String   @id @default(uuid())
+  content   String
+  channelId String   @map("channel_id")
+  senderId  String   @map("sender_id")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  sender  User    @relation(fields: [senderId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("channel_messages")
 }

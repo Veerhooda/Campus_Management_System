@@ -13,7 +13,6 @@ export class ClubsService {
     });
 
     if (!organizer?.organizerProfile) {
-      // Return null instead of 404 to avoid console errors
       return null;
     }
 
@@ -29,7 +28,6 @@ export class ClubsService {
     let organizerProfile = organizer?.organizerProfile;
 
     if (!organizerProfile) {
-      // Auto-create profile if missing (user is authenticated as ORGANIZER)
       organizerProfile = await this.prisma.organizer.create({
         data: { userId: organizerUserId },
       });
@@ -37,23 +35,33 @@ export class ClubsService {
 
     const club = await this.prisma.club.upsert({
       where: { organizerId: organizerProfile.id },
-      update: {
-        ...data,
-      },
-      create: {
-        ...data,
-        organizerId: organizerProfile.id,
-      },
+      update: { ...data },
+      create: { ...data, organizerId: organizerProfile.id },
     });
 
     return club;
   }
 
+  /**
+   * Add a student to the organizer's club by email
+   * Fixed: directly query the club via organizer profile to avoid response wrapping issues
+   */
   async addMember(organizerUserId: string, studentEmail: string) {
-    const club = await this.getMyClub(organizerUserId);
-    if (!club) {
+    // Directly resolve the club via the organizer profile
+    const organizer = await this.prisma.organizer.findUnique({
+      where: { userId: organizerUserId },
+      include: { club: true },
+    });
+
+    if (!organizer) {
+      throw new BadRequestException('Organizer profile not found. Please contact admin.');
+    }
+
+    if (!organizer.club) {
       throw new BadRequestException('Please set up your club profile first');
     }
+
+    const clubId = organizer.club.id;
 
     const studentUser = await this.prisma.user.findUnique({
       where: { email: studentEmail },
@@ -68,7 +76,7 @@ export class ClubsService {
     const existing = await this.prisma.clubMember.findUnique({
       where: {
         clubId_studentId: {
-          clubId: club.id,
+          clubId,
           studentId: studentUser.studentProfile.id,
         },
       },
@@ -80,24 +88,130 @@ export class ClubsService {
 
     return this.prisma.clubMember.create({
       data: {
-        clubId: club.id,
+        clubId,
         studentId: studentUser.studentProfile.id,
       },
-      include: { student: { include: { user: true } } },
-    });
-  }
-
-  async getMembers(organizerUserId: string) {
-    const club = await this.getMyClub(organizerUserId);
-    if (!club) return [];
-
-    return this.prisma.clubMember.findMany({
-      where: { clubId: club.id },
       include: {
         student: {
           include: {
             user: {
               select: { firstName: true, lastName: true, email: true },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Remove a member from the club
+   */
+  async removeMember(organizerUserId: string, memberId: string) {
+    const organizer = await this.prisma.organizer.findUnique({
+      where: { userId: organizerUserId },
+      include: { club: true },
+    });
+
+    if (!organizer?.club) {
+      throw new BadRequestException('Club not found');
+    }
+
+    const member = await this.prisma.clubMember.findFirst({
+      where: { id: memberId, clubId: organizer.club.id },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Member not found in your club');
+    }
+
+    await this.prisma.clubMember.delete({ where: { id: memberId } });
+    return { message: 'Member removed successfully' };
+  }
+
+  /**
+   * Search students by name or email (for member add autocomplete)
+   */
+  async searchStudents(query: string) {
+    if (!query || query.length < 2) return [];
+
+    return this.prisma.user.findMany({
+      where: {
+        AND: [
+          { roles: { some: { role: 'STUDENT' } } },
+          { isActive: true },
+          {
+            OR: [
+              { email: { contains: query, mode: 'insensitive' } },
+              { firstName: { contains: query, mode: 'insensitive' } },
+              { lastName: { contains: query, mode: 'insensitive' } },
+            ],
+          },
+        ],
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        studentProfile: {
+          select: {
+            rollNumber: true,
+            registrationNumber: true,
+            class: { select: { name: true } },
+          },
+        },
+      },
+      take: 10,
+    });
+  }
+
+  async getMembers(organizerUserId: string) {
+    const organizer = await this.prisma.organizer.findUnique({
+      where: { userId: organizerUserId },
+      include: { club: true },
+    });
+
+    if (!organizer?.club) return [];
+
+    return this.prisma.clubMember.findMany({
+      where: { clubId: organizer.club.id },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: { firstName: true, lastName: true, email: true },
+            },
+            class: { select: { name: true } },
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Get clubs a student belongs to (for student dashboard)
+   */
+  async getStudentClubs(userId: string) {
+    const student = await this.prisma.student.findUnique({
+      where: { userId },
+    });
+
+    if (!student) return [];
+
+    return this.prisma.clubMember.findMany({
+      where: { studentId: student.id },
+      include: {
+        club: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            logoUrl: true,
+            themeColor: true,
+            organizer: {
+              include: {
+                user: { select: { firstName: true, lastName: true } },
+              },
             },
           },
         },
@@ -112,6 +226,7 @@ export class ClubsService {
         organizer: {
           include: { user: true },
         },
+        _count: { select: { members: true, channels: true } },
       },
     });
   }
@@ -121,7 +236,6 @@ export class ClubsService {
       data: {
          name: data.name,
          description: data.description,
-         // Note: organizerId is not here, admin will assign later
       },
     });
   }
@@ -136,8 +250,6 @@ export class ClubsService {
       throw new NotFoundException('Organizer not found');
     }
 
-    // Check if organizer already has a club (if we enforce 1:1 strictly)
-    // Actually, prisma `unique` on organizerId handles this, but let's check gracefully
     const existingClub = await this.prisma.club.findUnique({
       where: { organizerId: organizerUser.organizerProfile.id },
     });

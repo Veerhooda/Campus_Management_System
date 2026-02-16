@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { clubService, Club, ClubMember, fileService } from '../../services';
+import { clubService, Club, ClubMember, fileService, channelService, Channel } from '../../services';
 import LoadingScreen from '../../components/shared/LoadingScreen';
 
 interface ClubForm {
@@ -16,10 +16,14 @@ interface ClubForm {
 const ClubSettings: React.FC = () => {
   const [club, setClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'details' | 'members'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'members' | 'channels'>('details');
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [addingMember, setAddingMember] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [newChannelName, setNewChannelName] = useState('');
+  const [newChannelDesc, setNewChannelDesc] = useState('');
+  const [creatingChannel, setCreatingChannel] = useState(false);
   
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBg, setUploadingBg] = useState(false);
@@ -111,6 +115,55 @@ const ClubSettings: React.FC = () => {
     }
   };
 
+  const handleRemoveMember = async (memberId: string) => {
+    if (!confirm('Remove this member from the club?')) return;
+    try {
+      await clubService.removeMember(memberId);
+      setMembers((prev) => prev.filter((m) => m.id !== memberId));
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to remove member');
+    }
+  };
+
+  const fetchChannels = async () => {
+    try {
+      const data = await channelService.getClubChannels();
+      setChannels(data || []);
+    } catch (err) {
+      console.error('Failed to fetch channels:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'channels') fetchChannels();
+  }, [activeTab]);
+
+  const handleCreateChannel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newChannelName.trim()) return;
+    try {
+      setCreatingChannel(true);
+      await channelService.createChannel(newChannelName.trim(), newChannelDesc.trim() || undefined);
+      setNewChannelName('');
+      setNewChannelDesc('');
+      fetchChannels();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to create channel');
+    } finally {
+      setCreatingChannel(false);
+    }
+  };
+
+  const handleDeleteChannel = async (channelId: string) => {
+    if (!confirm('Delete this channel and all its messages?')) return;
+    try {
+      await channelService.deleteChannel(channelId);
+      setChannels((prev) => prev.filter((c) => c.id !== channelId));
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to delete channel');
+    }
+  };
+
   if (loading) return <LoadingScreen />;
 
   // Initial State if no club exists (Create Mode)
@@ -146,6 +199,13 @@ const ClubSettings: React.FC = () => {
           onClick={() => club && setActiveTab('members')}
         >
           Members ({members.length})
+        </button>
+        <button
+          disabled={!club}
+          className={`px-6 py-3 font-medium text-sm transition-colors ${activeTab === 'channels' ? 'border-b-2 border-primary text-primary' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'} ${!club ? 'opacity-50 cursor-not-allowed' : ''}`}
+          onClick={() => club && setActiveTab('channels')}
+        >
+          Channels
         </button>
       </div>
 
@@ -373,7 +433,7 @@ const ClubSettings: React.FC = () => {
                          <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{member.student?.user?.email}</td>
                          <td className="px-6 py-3 text-slate-500">{new Date(member.joinedAt).toLocaleDateString()}</td>
                          <td className="px-6 py-3 text-right">
-                           <button className="text-red-500 hover:text-red-700 text-xs font-bold">Remove</button>
+                           <button onClick={() => handleRemoveMember(member.id)} className="text-red-500 hover:text-red-700 text-xs font-bold">Remove</button>
                          </td>
                        </tr>
                      ))}
@@ -382,6 +442,59 @@ const ClubSettings: React.FC = () => {
                </div>
              )}
            </div>
+        </div>
+      )}
+
+      {activeTab === 'channels' && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-surface-dark p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+            <h3 className="font-bold text-lg mb-4">Create Channel</h3>
+            <form onSubmit={handleCreateChannel} className="space-y-3">
+              <input type="text" placeholder="Channel name" required value={newChannelName} onChange={(e) => setNewChannelName(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <input type="text" placeholder="Description (optional)" value={newChannelDesc} onChange={(e) => setNewChannelDesc(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <button type="submit" disabled={creatingChannel} className="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50">
+                {creatingChannel ? 'Creating...' : 'Create Channel'}
+              </button>
+            </form>
+          </div>
+
+          {channels.length === 0 ? (
+            <div className="bg-white dark:bg-surface-dark p-8 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 text-center text-slate-500">No channels yet. Create one above.</div>
+          ) : (
+            <div className="space-y-4">
+              {channels.map((ch) => (
+                <div key={ch.id} className="bg-white dark:bg-surface-dark p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h4 className="font-bold text-lg">#{ch.name}</h4>
+                      {ch.description && <p className="text-sm text-slate-500">{ch.description}</p>}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">{ch._count?.members || 0} members &middot; {ch._count?.messages || 0} msgs</span>
+                      <button onClick={() => handleDeleteChannel(ch.id)} className="text-red-500 hover:text-red-700 text-sm font-bold">Delete</button>
+                    </div>
+                  </div>
+                  <div className="mt-3 border-t border-slate-100 dark:border-slate-700 pt-3">
+                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Members:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {ch.members?.map((m) => (
+                        <span key={m.id} className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full text-xs">
+                          {m.student.user.firstName} {m.student.user.lastName}
+                          <button onClick={async () => { await channelService.removeChannelMember(ch.id, m.id); fetchChannels(); }} className="text-red-400 hover:text-red-600 ml-1">&times;</button>
+                        </span>
+                      ))}
+                    </div>
+                    {members.length > 0 && (
+                      <select className="mt-2 text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" onChange={async (e) => { if (!e.target.value) return; try { await channelService.addChannelMember(ch.id, e.target.value); fetchChannels(); } catch (err: any) { alert(err.response?.data?.message || 'Failed to add'); } e.target.value = ''; }} defaultValue="">
+                        <option value="">+ Add club member to channel...</option>
+                        {members.map(m => (<option key={m.studentId} value={m.studentId}>{m.student?.user?.firstName} {m.student?.user?.lastName}</option>))}
+                      </select>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

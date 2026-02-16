@@ -69,12 +69,26 @@ export class UsersController {
 
   /**
    * GET /api/v1/users/:id
-   * Get user by ID (Admin only)
+   * Get user by ID (Admin or Teacher)
    */
   @Get(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.TEACHER)
   async findById(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findById(id);
+  }
+
+  /**
+   * GET /api/v1/users/department/:deptId/students
+   * Get students by department (Faculty only)
+   */
+  @Get('department/:deptId/students')
+  @Roles(Role.ADMIN, Role.TEACHER)
+  async findStudentsByDepartment(
+    @Param('deptId', ParseUUIDPipe) deptId: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    return this.usersService.findStudentsByDepartment(deptId, page, limit);
   }
 
   /**

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { userService } from '../../services';
 import { User, UserRole } from '../../types';
+import StudentProfileModal from '../../components/shared/StudentProfileModal';
 
 const ROLES: { label: string; value: UserRole | 'ALL' }[] = [
   { label: 'All Users', value: 'ALL' },
@@ -20,6 +21,7 @@ const UserManagement: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
 
   // Create user form state
   const [form, setForm] = useState({
@@ -248,6 +250,13 @@ const UserManagement: React.FC = () => {
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
                         <button
+                          onClick={() => setProfileUserId(user.id)}
+                          className="text-xs px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 font-medium transition-colors"
+                          title="View Profile"
+                        >
+                          Profile
+                        </button>
+                        <button
                           onClick={() => handleDeactivate(user.id)}
                           className="text-xs px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 font-medium transition-colors"
                           title="Deactivate"
@@ -461,6 +470,11 @@ const UserManagement: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Student Profile Modal */}
+      {profileUserId && (
+        <StudentProfileModal userId={profileUserId} onClose={() => setProfileUserId(null)} />
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Put, Param } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ClubsService } from './clubs.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -8,10 +8,13 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { User } from '@prisma/client';
 import { CreateClubDto, UpdateClubDto } from './dto/club.dto';
 import { AddMemberDto } from './dto/add-member.dto';
+import { Put } from '@nestjs/common';
 
 @Controller('clubs')
 export class ClubsController {
   constructor(private readonly clubsService: ClubsService) {}
+
+  // --- ORGANIZER ENDPOINTS ---
 
   @Get('my-club')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -34,11 +37,34 @@ export class ClubsController {
     return this.clubsService.addMember(user.id, dto.email);
   }
 
+  @Delete('members/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ORGANIZER)
+  async removeMember(@CurrentUser() user: User, @Param('id') memberId: string) {
+    return this.clubsService.removeMember(user.id, memberId);
+  }
+
   @Get('members')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ORGANIZER)
   async getMembers(@CurrentUser() user: User) {
     return this.clubsService.getMembers(user.id);
+  }
+
+  @Get('students/search')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ORGANIZER)
+  async searchStudents(@Query('q') query: string) {
+    return this.clubsService.searchStudents(query);
+  }
+
+  // --- STUDENT ENDPOINTS ---
+
+  @Get('my-clubs')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.STUDENT)
+  async getStudentClubs(@CurrentUser() user: User) {
+    return this.clubsService.getStudentClubs(user.id);
   }
 
   // --- ADMIN ENDPOINTS ---

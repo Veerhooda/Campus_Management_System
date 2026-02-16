@@ -38,6 +38,7 @@ import StudentGrievances from './pages/student/Grievances';
 import MaintenanceRequests from './pages/student/MaintenanceRequests';
 import StudentNotes from './pages/student/Notes';
 import StudentEvents from './pages/student/Events';
+import StudentChannels from './pages/student/Channels';
 
 // Shared Pages
 import Notifications from './pages/shared/Notifications';
@@ -150,6 +151,11 @@ const App: React.FC = () => {
         <Route path="/student/events" element={
           <ProtectedRoute allowedRoles={['STUDENT']}>
             <StudentEvents />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/channels" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentChannels />
           </ProtectedRoute>
         } />
 

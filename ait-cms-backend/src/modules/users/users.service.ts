@@ -191,17 +191,32 @@ export class UsersService {
   }
 
   /**
-   * Find user by ID
+   * Find user by ID (with deep profile relations)
    */
   async findById(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
         roles: { select: { role: true } },
-        studentProfile: true,
-        teacherProfile: true,
+        studentProfile: {
+          include: {
+            class: {
+              include: { department: true },
+            },
+            clubMemberships: {
+              include: {
+                club: { select: { id: true, name: true, logoUrl: true, themeColor: true } },
+              },
+            },
+          },
+        },
+        teacherProfile: {
+          include: { department: true },
+        },
         adminProfile: true,
-        organizerProfile: true,
+        organizerProfile: {
+          include: { club: { select: { id: true, name: true } } },
+        },
       },
     });
 
@@ -210,6 +225,41 @@ export class UsersService {
     }
 
     return this.sanitizeUser(user);
+  }
+
+  /**
+   * Find students by department (for Faculty)
+   */
+  async findStudentsByDepartment(departmentId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    const [students, total] = await Promise.all([
+      this.prisma.student.findMany({
+        where: {
+          class: { departmentId },
+        },
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: { id: true, firstName: true, lastName: true, email: true, phone: true, isActive: true },
+          },
+          class: { include: { department: true } },
+          clubMemberships: {
+            include: { club: { select: { id: true, name: true } } },
+          },
+        },
+        orderBy: { rollNumber: 'asc' },
+      }),
+      this.prisma.student.count({
+        where: { class: { departmentId } },
+      }),
+    ]);
+
+    return {
+      data: students,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   /**

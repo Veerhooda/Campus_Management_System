@@ -20,6 +20,7 @@ const getNavigationItems = (role: UserRole): NavItem[] => {
     { icon: 'grid_view', label: 'Dashboard', path: '/student/dashboard' },
     { icon: 'calendar_month', label: 'Schedule', path: '/student/schedule' },
     { icon: 'event', label: 'Events', path: '/student/events' },
+    { icon: 'forum', label: 'Channels', path: '/student/channels' },
     { icon: 'library_books', label: 'Notes', path: '/student/notes' },
     { icon: 'support_agent', label: 'Grievances', path: '/student/grievances' },
     { icon: 'build', label: 'Maintenance', path: '/student/maintenance' },

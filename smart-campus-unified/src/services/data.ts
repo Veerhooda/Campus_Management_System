@@ -313,6 +313,16 @@ export const userService = {
     const response = await api.get<ApiResponse<{ data: TeacherInfo[] }>>('/teachers', { params: { limit: 100 } });
     return response.data.data.data;
   },
+
+  getUserProfile: async (id: string) => {
+    const response = await api.get<ApiResponse<any>>(`/users/${id}`);
+    return response.data.data;
+  },
+
+  getStudentsByDepartment: async (deptId: string, page = 1, limit = 20) => {
+    const response = await api.get<ApiResponse<any>>(`/users/department/${deptId}/students`, { params: { page, limit } });
+    return response.data.data;
+  },
 };
 
 // Maintenance service
