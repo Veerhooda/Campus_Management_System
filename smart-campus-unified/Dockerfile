@@ -7,6 +7,10 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+
+# Set API URL to relative path so it goes through Nginx proxy
+ENV VITE_API_URL=/api/v1
+
 RUN npm run build
 
 # Serve Stage
